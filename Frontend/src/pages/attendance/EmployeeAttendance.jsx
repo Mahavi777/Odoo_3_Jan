@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { checkIn as apiCheckIn, checkOut as apiCheckOut, getMyAttendance } from '../../api/attendance.api';
 import { Search, ChevronLeft, ChevronRight, ChevronDown, LogOut, User, Calendar, Clock, TrendingUp, CheckCircle, XCircle, Coffee, AlertCircle } from 'lucide-react';
+import { toast } from 'react-toastify';
 
 export default function EmployeeAttendance() {
   const [attendanceRecords, setAttendanceRecords] = useState([]);
@@ -28,9 +29,16 @@ export default function EmployeeAttendance() {
     try {
       const res = await apiCheckIn();
       setTodayAttendance(res.attendance || res);
+      toast.success('Checked in successfully!');
+      // Reload attendance data
+      const records = await getMyAttendance(selectedMonth, selectedYear);
+      setAttendanceRecords(records || []);
+      const todayStr = new Date().toDateString();
+      const todayRec = records?.find(r => new Date(r.date).toDateString() === todayStr) || null;
+      setTodayAttendance(todayRec);
     } catch (err) {
       console.error('Check-in failed', err);
-      alert(err?.response?.data?.message || 'Check-in failed');
+      toast.error(err?.response?.data?.message || 'Check-in failed');
     }
   };
 
@@ -38,9 +46,16 @@ export default function EmployeeAttendance() {
     try {
       const res = await apiCheckOut();
       setTodayAttendance(res.attendance || res);
+      toast.success('Checked out successfully!');
+      // Reload attendance data
+      const records = await getMyAttendance(selectedMonth, selectedYear);
+      setAttendanceRecords(records || []);
+      const todayStr = new Date().toDateString();
+      const todayRec = records?.find(r => new Date(r.date).toDateString() === todayStr) || null;
+      setTodayAttendance(todayRec);
     } catch (err) {
       console.error('Check-out failed', err);
-      alert(err?.response?.data?.message || 'Check-out failed');
+      toast.error(err?.response?.data?.message || 'Check-out failed');
     }
   };
 
@@ -59,22 +74,74 @@ export default function EmployeeAttendance() {
           <p className="text-gray-600 mt-1">View your daily attendance records and work hours</p>
         </div>
 
-        {/* Check In/Out Buttons */}
-        <div className="mb-6 flex gap-4">
-          <button
-            onClick={handleCheckIn}
-            disabled={todayAttendance?.checkIn}
-            className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium transition-all shadow-md"
-          >
-            Check In
-          </button>
-          <button
-            onClick={handleCheckOut}
-            disabled={!todayAttendance?.checkIn || todayAttendance?.checkOut}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium transition-all shadow-md"
-          >
-            Check Out
-          </button>
+        {/* Check In/Out Component */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 border-2 border-indigo-100">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            {/* Status Indicator */}
+            <div className="flex items-center gap-4">
+              <div className={`w-16 h-16 rounded-full flex items-center justify-center ${
+                todayAttendance?.checkIn 
+                  ? 'bg-green-100 border-4 border-green-500' 
+                  : 'bg-gray-100 border-4 border-gray-300'
+              }`}>
+                {todayAttendance?.checkIn ? (
+                  <CheckCircle className="w-8 h-8 text-green-600" />
+                ) : (
+                  <Clock className="w-8 h-8 text-gray-400" />
+                )}
+              </div>
+              <div>
+                <p className="text-sm text-gray-600 font-medium">Current Status</p>
+                <p className={`text-xl font-bold ${
+                  todayAttendance?.checkIn ? 'text-green-600' : 'text-gray-400'
+                }`}>
+                  {todayAttendance?.checkIn ? 'Checked In' : 'Not Checked In'}
+                </p>
+                {todayAttendance?.checkIn && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Checked in at: {new Date(todayAttendance.checkIn).toLocaleTimeString()}
+                  </p>
+                )}
+                {todayAttendance?.checkOut && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Checked out at: {new Date(todayAttendance.checkOut).toLocaleTimeString()}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-4">
+              <button
+                onClick={handleCheckIn}
+                disabled={todayAttendance?.checkIn}
+                className={`px-8 py-4 rounded-xl font-bold text-white transition-all shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${
+                  todayAttendance?.checkIn 
+                    ? 'bg-gray-400' 
+                    : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5" />
+                  <span>Check In</span>
+                </div>
+              </button>
+              <button
+                onClick={handleCheckOut}
+                disabled={!todayAttendance?.checkIn || todayAttendance?.checkOut}
+                className={`px-8 py-4 rounded-xl font-bold text-white transition-all shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${
+                  !todayAttendance?.checkIn || todayAttendance?.checkOut
+                    ? 'bg-gray-400'
+                    : 'bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <XCircle className="w-5 h-5" />
+                  <span>Check Out</span>
+                </div>
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Stats Cards */}
