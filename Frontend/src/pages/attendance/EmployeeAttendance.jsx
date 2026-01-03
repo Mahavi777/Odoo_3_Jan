@@ -22,11 +22,8 @@ export default function EmployeeAttendance() {
     }
   };
 
-<<<<<<< HEAD
-  const handleStatusChange = () => {
     // Reload attendance records when status changes
     loadAttendance();
-=======
   const handleCheckOut = async () => {
     try {
       const res = await apiCheckOut({ breakTime });
@@ -42,7 +39,6 @@ export default function EmployeeAttendance() {
       console.error('Check-out failed', err);
       toast.error(err?.response?.data?.message || 'Check-out failed');
     }
->>>>>>> dc5923f658d811feb9a2eb14cb10ec493e6b2d2d
   };
 
   // Calculate statistics
