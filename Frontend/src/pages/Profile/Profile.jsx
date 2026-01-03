@@ -2,11 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Input from '../../components/common/Input';
 import Button from '../../components/common/Button';
-<<<<<<< HEAD
 import { getProfile, updateProfile } from '../../api/auth.api';
-=======
-import { updateProfile } from '../../api/auth.api';
->>>>>>> 15d7ad76538169606f6e8fd4280fd6bd0db3eebe
 
 const Profile = ({ user, onLogout }) => {
   const [profile, setProfile] = useState(null);
@@ -17,13 +13,22 @@ const Profile = ({ user, onLogout }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-<<<<<<< HEAD
     // Fetch user profile from server; fall back to localStorage
     const load = async () => {
       try {
         const data = await getProfile();
         setProfile(data);
-        setFormData(data);
+        
+        // Ensure we have firstName and lastName
+        const firstName = data.firstName || (data.fullName ? data.fullName.split(' ')[0] : '');
+        const lastName = data.lastName || (data.fullName ? data.fullName.split(' ').slice(1).join(' ') : '');
+        
+        setFormData({
+          ...data,
+          firstName,
+          lastName,
+        });
+        
         // keep local cache in sync
         localStorage.setItem('user', JSON.stringify(data));
       } catch (err) {
@@ -31,32 +36,22 @@ const Profile = ({ user, onLogout }) => {
         if (userData) {
           const parsedUser = JSON.parse(userData);
           setProfile(parsedUser);
-          setFormData(parsedUser);
+          
+          // Ensure we have firstName and lastName
+          const firstName = parsedUser.firstName || (parsedUser.fullName ? parsedUser.fullName.split(' ')[0] : '');
+          const lastName = parsedUser.lastName || (parsedUser.fullName ? parsedUser.fullName.split(' ').slice(1).join(' ') : '');
+          
+          setFormData({
+            ...parsedUser,
+            firstName,
+            lastName,
+          });
         }
       } finally {
         setLoading(false);
       }
     };
     load();
-=======
-    // Fetch user profile
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      const parsedUser = JSON.parse(userData);
-      setProfile(parsedUser);
-      
-      // Ensure we have firstName and lastName
-      const firstName = parsedUser.firstName || (parsedUser.fullName ? parsedUser.fullName.split(' ')[0] : '');
-      const lastName = parsedUser.lastName || (parsedUser.fullName ? parsedUser.fullName.split(' ').slice(1).join(' ') : '');
-      
-      setFormData({
-        ...parsedUser,
-        firstName,
-        lastName,
-      });
-    }
-    setLoading(false);
->>>>>>> 15d7ad76538169606f6e8fd4280fd6bd0db3eebe
   }, []);
 
   const handleChange = (e) => {
@@ -66,31 +61,27 @@ const Profile = ({ user, onLogout }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-<<<<<<< HEAD
-    try {
-      const updated = await updateProfile(formData);
-      setProfile(updated);
-      setFormData(updated);
-      localStorage.setItem('user', JSON.stringify(updated));
-      setEditing(false);
-    } catch (err) {
-      console.error('Failed to update profile', err);
-      alert(err?.response?.data?.message || 'Update failed');
-    }
-=======
     setError('');
     setLoading(true);
 
     try {
-      // Call update profile API
-      const updatedUser = await updateProfile(profile?.id || profile?._id, formData);
+      const updated = await updateProfile(formData);
+      setProfile(updated);
       
-      // Update localStorage with new user data
-      localStorage.setItem('user', JSON.stringify(updatedUser));
-      setProfile(updatedUser);
+      // Ensure we have firstName and lastName
+      const firstName = updated.firstName || (updated.fullName ? updated.fullName.split(' ')[0] : '');
+      const lastName = updated.lastName || (updated.fullName ? updated.fullName.split(' ').slice(1).join(' ') : '');
+      
+      setFormData({
+        ...updated,
+        firstName,
+        lastName,
+      });
+      
+      localStorage.setItem('user', JSON.stringify(updated));
       setEditing(false);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to update profile');
+      setError(err?.response?.data?.message || 'Failed to update profile');
       console.error('Profile update error:', err);
     } finally {
       setLoading(false);
@@ -123,7 +114,6 @@ const Profile = ({ user, onLogout }) => {
       });
     }
     setEditing(false);
->>>>>>> 15d7ad76538169606f6e8fd4280fd6bd0db3eebe
   };
 
   const handleLogout = () => {
