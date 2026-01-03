@@ -15,7 +15,11 @@ import ActivityPage from './pages/Activity';
 import AttendancePage from './pages/AttendancePage';
 import Payroll from './pages/payroll/Payroll';
 import Analytics from './pages/analytics/Analytics';
+<<<<<<< HEAD
 import Salary from './pages/salary/Salary';
+=======
+import ViewEmployeeInfo from './pages/employee/ViewEmployeeInfo';
+>>>>>>> e31cc37d4ebb630df8ee3d8fcf2bbdd35739680f
 import useAuth from './hooks/useAuth';
 
 const PrivateRoute = ({ children }) => {
@@ -80,8 +84,13 @@ function App() {
           element={<PrivateRoute><Analytics user={user} onLogout={handleLogout} /></PrivateRoute>}
         />
         <Route
+<<<<<<< HEAD
           path="/salary"
           element={<PrivateRoute><Salary user={user} onLogout={handleLogout} /></PrivateRoute>}
+=======
+          path="/employee/:employeeId"
+          element={<PrivateRoute><ViewEmployeeInfo user={user} onLogout={handleLogout} /></PrivateRoute>}
+>>>>>>> e31cc37d4ebb630df8ee3d8fcf2bbdd35739680f
         />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
