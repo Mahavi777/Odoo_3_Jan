@@ -5,6 +5,7 @@ import { getDashboard } from '../../api/dashboard.api';
 import { getAllLeaves } from '../../api/leave.api';
 import AdminAttendence from '../attendance/AdminAttendence';
 import AdminTimeOff from '../leave/AdminTimeOff';
+import Salary from '../salary/Salary';
 
 const AdminDashboard = ({ user, onLogout }) => {
   const [stats, setStats] = useState({
@@ -68,7 +69,7 @@ const AdminDashboard = ({ user, onLogout }) => {
           
           {/* Tabs */}
           <nav className="flex space-x-1 bg-gray-100 rounded-lg p-1">
-            {['dashboard', 'attendance', 'time-off'].map((tab) => (
+            {['dashboard', 'attendance', 'time-off', 'salary'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -145,6 +146,8 @@ const AdminDashboard = ({ user, onLogout }) => {
               </div>
             </div>
           </>
+        ) : activeTab === 'salary' ? (
+          <Salary />
         ) : (
           <AdminTimeOff />
         )}

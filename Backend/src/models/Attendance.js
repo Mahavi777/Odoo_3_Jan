@@ -17,6 +17,14 @@ const attendanceSchema = new Schema({
   checkOut: {
     type: Date,
   },
+  breakTime: {
+    type: Number, // in minutes
+    default: 0,
+  },
+  totalWorkingHours: {
+    type: Number,
+    default: 0,
+  },
   status: {
     type: String,
     enum: ['Present', 'Absent', 'Half-Day', 'Leave'],

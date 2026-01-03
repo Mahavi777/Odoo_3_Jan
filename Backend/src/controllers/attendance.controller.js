@@ -1,10 +1,8 @@
 import Attendance from '../models/Attendance.js';
 import Activity from '../models/Activity.js';
 import User from '../models/User.js';
-
-function startOfDay(date) {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-}
+import { startOfDay } from '../utils/date.util.js';
+import { generateDailyAttendance } from '../services/attendance.service.js';
 
 // POST /api/attendance/checkin
 export const checkIn = async (req, res) => {
@@ -40,6 +38,7 @@ export const checkIn = async (req, res) => {
 export const checkOut = async (req, res) => {
   try {
     const userId = req.user.id;
+    const { breakTime } = req.body; // breakTime in minutes
     const today = startOfDay(new Date());
 
     let attendance = await Attendance.findOne({ user: userId, date: today });
@@ -51,6 +50,16 @@ export const checkOut = async (req, res) => {
     }
 
     attendance.checkOut = new Date();
+    attendance.breakTime = breakTime || 0;
+
+    if (attendance.checkIn) {
+      const checkInTime = attendance.checkIn.getTime();
+      const checkOutTime = attendance.checkOut.getTime();
+      const totalDuration = (checkOutTime - checkInTime) / (1000 * 60 * 60); // in hours
+      const totalWork = totalDuration - (attendance.breakTime / 60);
+      attendance.totalWorkingHours = totalWork > 0 ? totalWork : 0;
+    }
+    
     // if checkIn exists ensure status is Present
     attendance.status = attendance.status || 'Present';
 
@@ -131,5 +140,15 @@ export const getAllAttendance = async (req, res) => {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
   }
+};
+
+export const generateDailyAttendanceRecords = async (req, res) => {
+    try {
+        await generateDailyAttendance();
+        res.status(200).json({ message: 'Daily attendance generated successfully' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
 };
 

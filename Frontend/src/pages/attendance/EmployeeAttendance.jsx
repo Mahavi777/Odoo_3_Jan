@@ -7,6 +7,7 @@ export default function EmployeeAttendance() {
   const [todayAttendance, setTodayAttendance] = useState(null);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [breakTime, setBreakTime] = useState(0);
 
   useEffect(() => {
     const loadAttendance = async () => {
@@ -36,7 +37,7 @@ export default function EmployeeAttendance() {
 
   const handleCheckOut = async () => {
     try {
-      const res = await apiCheckOut();
+      const res = await apiCheckOut({ breakTime });
       setTodayAttendance(res.attendance || res);
     } catch (err) {
       console.error('Check-out failed', err);
@@ -45,8 +46,8 @@ export default function EmployeeAttendance() {
   };
 
   // Calculate statistics
-  const daysPresent = attendanceRecords.filter(r => r.status === 'present' || (r.checkIn && r.checkIn !== '-')).length;
-  const leavesCount = attendanceRecords.filter(r => r.status === 'leave').length;
+  const daysPresent = attendanceRecords.filter(r => r.status === 'Present').length;
+  const leavesCount = attendanceRecords.filter(r => r.status === 'Leave').length;
   const totalWorkingDays = attendanceRecords.length;
 
   return (
@@ -60,7 +61,7 @@ export default function EmployeeAttendance() {
         </div>
 
         {/* Check In/Out Buttons */}
-        <div className="mb-6 flex gap-4">
+        <div className="mb-6 flex gap-4 items-center">
           <button
             onClick={handleCheckIn}
             disabled={todayAttendance?.checkIn}
@@ -68,6 +69,13 @@ export default function EmployeeAttendance() {
           >
             Check In
           </button>
+          <input
+            type="number"
+            value={breakTime}
+            onChange={(e) => setBreakTime(e.target.value)}
+            placeholder="Break (mins)"
+            className="px-4 py-2 border rounded-lg w-32"
+          />
           <button
             onClick={handleCheckOut}
             disabled={!todayAttendance?.checkIn || todayAttendance?.checkOut}
@@ -192,10 +200,10 @@ export default function EmployeeAttendance() {
                     Check Out
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                    Work Hours
+                    Break Time
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                    Extra Hours
+                    Work Hours
                   </th>
                 </tr>
               </thead>
@@ -203,17 +211,16 @@ export default function EmployeeAttendance() {
                 {attendanceRecords.length > 0 ? (
                   attendanceRecords.map((record, index) => {
                     const recordDate = new Date(record.date);
-                    const checkIn = record.checkIn || record.check_in || '-';
-                    const checkOut = record.checkOut || record.check_out || '-';
-                    const workHours = record.workHours || record.work_hours || '-';
-                    const extraHours = record.extraHours || record.extra_hours || '-';
-                    const status = record.status || (checkIn !== '-' ? 'present' : 'leave');
+                    const checkIn = record.checkIn ? new Date(record.checkIn).toLocaleTimeString() : '-';
+                    const checkOut = record.checkOut ? new Date(record.checkOut).toLocaleTimeString() : '-';
+                    const workHours = record.totalWorkingHours ? record.totalWorkingHours.toFixed(2) : '-';
+                    const breakTime = record.breakTime || 0;
                     
                     return (
                       <tr 
                         key={index}
                         className={`hover:bg-indigo-50 transition-colors ${
-                          status === 'leave' ? 'bg-amber-50' : ''
+                          record.status === 'Leave' ? 'bg-amber-50' : ''
                         }`}
                       >
                         <td className="px-6 py-4">
@@ -241,24 +248,15 @@ export default function EmployeeAttendance() {
                           </span>
                         </td>
                         <td className="px-6 py-4">
+                          <span className="text-gray-900">{breakTime} mins</span>
+                        </td>
+                        <td className="px-6 py-4">
                           <span className={`px-3 py-1 rounded-lg text-sm font-medium ${
                             workHours === '-' 
                               ? 'bg-gray-100 text-gray-400'
                               : 'bg-emerald-100 text-emerald-700'
                           }`}>
                             {workHours}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className={`inline-flex items-center space-x-1 px-3 py-1 rounded-lg text-sm font-medium ${
-                            extraHours === '-' || extraHours === '00:00'
-                              ? 'bg-gray-100 text-gray-400'
-                              : 'bg-indigo-100 text-indigo-700'
-                          }`}>
-                            {extraHours !== '-' && extraHours !== '00:00' && (
-                              <TrendingUp className="w-4 h-4" />
-                            )}
-                            <span>{extraHours}</span>
                           </span>
                         </td>
                       </tr>

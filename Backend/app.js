@@ -21,6 +21,7 @@ import attendanceRoutes from './src/routes/attendance.routes.js';
 import dashboardRoutes from './src/routes/dashboard.routes.js';
 import leaveRoutes from './src/routes/leave.routes.js';
 import payrollRoutes from './src/routes/payroll.routes.js';
+import salaryRoutes from './src/routes/salary.routes.js';
 import connectDB from './src/config/db.js';
 
 const app = express();
@@ -68,6 +69,7 @@ app.use('/api/attendance', attendanceRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/leave', leaveRoutes);
 app.use('/api/payroll', payrollRoutes);
+app.use('/api/salary', salaryRoutes);
 
 
 const PORT = process.env.PORT || 5000;

@@ -13,6 +13,8 @@ router.get('/user/:userId', protect, checkRole(['ADMIN', 'HR']), payrollControll
 router.post('/', protect, checkRole(['ADMIN', 'HR']), payrollController.createPayroll);
 router.put('/:id', protect, checkRole(['ADMIN', 'HR']), payrollController.updatePayroll);
 router.put('/user/:userId', protect, checkRole(['ADMIN', 'HR']), payrollController.updatePayrollByUserId);
+router.get('/payable-days/:userId', protect, checkRole(['ADMIN', 'HR']), payrollController.getPayableDays);
+
 
 export default router;
 
