@@ -45,12 +45,18 @@ const SignUp = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4">
-      <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
-        <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">Sign Up</h2>
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex items-center justify-center px-4">
+      <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8 w-full max-w-md">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-pink-400 to-purple-500 rounded-full mb-4 shadow-lg">
+            <span className="text-white text-3xl font-bold">S</span>
+          </div>
+          <h2 className="text-3xl font-bold text-gray-800">Create Account</h2>
+          <p className="text-gray-600 mt-2">Join us today and get started</p>
+        </div>
         
         {error && (
-          <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
+          <div className="mb-4 p-4 bg-red-100 border-l-4 border-red-500 text-red-700 rounded-lg">
             {error}
           </div>
         )}
@@ -109,7 +115,7 @@ const SignUp = () => {
           <Button
             type="submit"
             disabled={loading}
-            className="w-full"
+            className="w-full bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white font-semibold py-3 rounded-lg shadow-lg transition-all duration-200 mt-6"
           >
             {loading ? 'Creating Account...' : 'Sign Up'}
           </Button>
@@ -117,7 +123,7 @@ const SignUp = () => {
 
         <div className="mt-6 text-center text-sm text-gray-600">
           Already have an account?{' '}
-          <Link to="/signin" className="text-indigo-600 hover:underline font-semibold">
+          <Link to="/signin" className="text-purple-600 hover:text-purple-700 hover:underline font-semibold">
             Sign In
           </Link>
         </div>
