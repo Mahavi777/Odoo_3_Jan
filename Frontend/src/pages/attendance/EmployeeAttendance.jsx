@@ -75,7 +75,6 @@ export default function EmployeeAttendance() {
           <p className="text-gray-600 mt-1">View your daily attendance records and work hours</p>
         </div>
 
-<<<<<<< HEAD
         {/* Check In/Out Buttons */}
         <div className="mb-6 flex gap-4 items-center">
           <button
@@ -99,7 +98,6 @@ export default function EmployeeAttendance() {
           >
             Check Out
           </button>
-=======
         {/* Check In/Out Component */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 border-2 border-indigo-100">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
@@ -168,7 +166,6 @@ export default function EmployeeAttendance() {
               </button>
             </div>
           </div>
->>>>>>> e31cc37d4ebb630df8ee3d8fcf2bbdd35739680f
         </div>
 
         {/* Stats Cards */}
@@ -381,6 +378,8 @@ export default function EmployeeAttendance() {
             </div>
           </div>
         </div>
+        </div>
+
       </main>
     </div>
   );
