@@ -1,5 +1,21 @@
 import api from '../services/api';
 
+// Authentication endpoints
+export const login = async (credentials) => {
+  const res = await api.post('/auth/login', credentials);
+  return res;
+};
+
+export const signup = async (userData) => {
+  const res = await api.post('/auth/signup', userData);
+  return res;
+};
+
+export const logout = async () => {
+  const res = await api.post('/auth/logout');
+  return res;
+};
+
 // --- existing functions (keep them as they are) ---
 export const getProfile = async (userId) => {
   const res = await api.get(`/profile/${userId}`);

@@ -9,6 +9,9 @@ import SignUp from './pages/auth/SignUp';
 import Profile from './pages/profile/Profile';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import VerifyOtp from './pages/auth/VerifyOtp';
+import AuthCallback from './components/common/OAuthCallback';
+import Dashboard from './pages/dashboard/Dashboard';
+import ActivityPage from './pages/Activity';
 import useAuth from './hooks/useAuth';
 
 const PrivateRoute = ({ children }) => {

@@ -6,7 +6,6 @@ const userSchema = new Schema({
   company: {
     type: Schema.Types.ObjectId,
     ref: 'Company',
-    required: true,
   },
   fullName: {
     type: String,
