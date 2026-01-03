@@ -56,6 +56,9 @@ mongoose.connection.on('disconnected', () => {
 app.use('/api/auth', require('./src/routes/auth.routes.js'));
 app.use('/api/profile', require('./src/routes/profile.routes.js'));
 app.use('/api/users', require('./src/routes/user.routes.js'));
+// Mount attendance and dashboard routes
+app.use('/api/attendance', require('./src/routes/attendance.routes.js'));
+app.use('/api/dashboard', require('./src/routes/dashboard.routes.js'));
 
 
 const PORT = process.env.PORT || 5000;

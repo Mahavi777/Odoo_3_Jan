@@ -60,12 +60,12 @@ passport.deserializeUser(async (id, done) => {
 });
 // Signup
 const signup = async (req, res) => {
-  const { username, firstName, lastName, email, password } = req.body;
+  const { firstName, lastName, email, password } = req.body;
 
   console.log("Signup attempt for email:", email);
   console.log("Request body:", req.body);
 
-  // --- No changes to your validation logic ---
+  // --- Validation ---
   if (!firstName || !lastName || !email || !password) {
     return res.status(400).json({ message: "Missing required fields" });
   }
@@ -88,12 +88,14 @@ const signup = async (req, res) => {
       return res.status(400).json({ message: "User already exists" });
     }
 
+    // Create fullName from firstName and lastName
+    const fullName = `${firstName} ${lastName}`;
+
     user = new User({
-      username,
-      firstName,
-      lastName,
+      fullName,
       email,
       password,
+      role: 'EMPLOYEE', // Default role for new signups
     });
 
     await user.save();
@@ -111,7 +113,7 @@ const signup = async (req, res) => {
     jwt.sign(
       payload,
       process.env.JWT_SECRET, // Your secret key from .env file
-      { expiresIn: "1d" }, // Token expires in 5 hours
+      { expiresIn: "1d" }, // Token expires in 1 day
       (err, token) => {
         if (err) throw err;
         // <-- 4. Send the token back to the client
@@ -121,9 +123,10 @@ const signup = async (req, res) => {
           user: {
             id: user.id,
             email: user.email,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            username: user.username,
+            fullName: user.fullName,
+            firstName: user.fullName.split(' ')[0],
+            lastName: user.fullName.split(' ').slice(1).join(' '),
+            role: user.role,
           },
         });
       }
@@ -186,9 +189,10 @@ const signin = async (req, res) => {
             user: {
               id: user.id,
               email: user.email,
-              firstName: user.firstName,
-              lastName: user.lastName,
-              username: user.username,
+              fullName: user.fullName,
+              firstName: user.fullName.split(' ')[0],
+              lastName: user.fullName.split(' ').slice(1).join(' '),
+              role: user.role,
             },
           });
         }
