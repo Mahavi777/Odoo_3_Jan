@@ -93,26 +93,26 @@ export default function AdminProfile() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="bg-white rounded-t-2xl shadow-lg p-6 border-b-2 border-slate-200">
+        <div className="bg-gradient-to-r from-purple-800/40 to-indigo-800/40 backdrop-blur-lg rounded-t-2xl shadow-2xl p-6 border-b border-purple-400/30">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-slate-600 to-slate-800 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-lg">
-                A
+              <div className="w-16 h-16 bg-gradient-to-br from-pink-400 to-purple-500 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-lg">
+                J
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-gray-800">Admin Profile</h1>
-                <p className="text-gray-500 text-sm">For Admin: Full Access to All Information</p>
+                <h1 className="text-3xl font-bold text-white">My Profile</h1>
+                <p className="text-purple-200 text-sm">Manage your personal information</p>
               </div>
             </div>
             <button
               onClick={() => setIsEditing(!isEditing)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all shadow-lg ${
                 isEditing 
                   ? 'bg-red-500 hover:bg-red-600 text-white' 
-                  : 'bg-slate-600 hover:bg-slate-700 text-white'
+                  : 'bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white'
               }`}
             >
               {isEditing ? <X size={18} /> : <Edit2 size={18} />}
@@ -122,21 +122,24 @@ export default function AdminProfile() {
         </div>
 
         {/* Main Content */}
-        <div className="bg-white rounded-b-2xl shadow-lg">
+        <div className="bg-white/95 backdrop-blur-sm rounded-b-2xl shadow-2xl">
           {/* Profile Header Section */}
           <div className="p-8 border-b border-gray-200">
             <div className="flex flex-col md:flex-row gap-8">
               {/* Left Side - Avatar */}
               <div className="flex flex-col items-center">
                 <div className="relative">
-                  <div className="w-32 h-32 bg-gradient-to-br from-pink-300 to-pink-400 rounded-full flex items-center justify-center shadow-xl">
-                    <Edit2 size={40} className="text-white" />
+                  <div className="w-32 h-32 bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-2xl">
+                    <User size={50} className="text-white" />
                   </div>
                   {isEditing && (
-                    <button className="absolute bottom-0 right-0 bg-slate-600 text-white p-2 rounded-full shadow-lg hover:bg-slate-700">
+                    <button className="absolute bottom-0 right-0 bg-purple-600 text-white p-2 rounded-full shadow-lg hover:bg-purple-700 transition-colors">
                       <Edit2 size={16} />
                     </button>
                   )}
+                </div>
+                <div className="mt-4 px-6 py-2 bg-purple-100 rounded-full">
+                  <p className="text-purple-900 font-semibold">EMP001</p>
                 </div>
               </div>
 
@@ -149,7 +152,7 @@ export default function AdminProfile() {
                     value={profileData.name}
                     onChange={(e) => handleInputChange('name', e.target.value)}
                     disabled={!isEditing}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-700"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-700"
                   />
                 </div>
                 <div>
@@ -159,7 +162,7 @@ export default function AdminProfile() {
                     value={profileData.company}
                     onChange={(e) => handleInputChange('company', e.target.value)}
                     disabled={!isEditing}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-700"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-700"
                   />
                 </div>
                 <div>
@@ -169,7 +172,7 @@ export default function AdminProfile() {
                     value={profileData.loginId}
                     onChange={(e) => handleInputChange('loginId', e.target.value)}
                     disabled={!isEditing}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-700"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-700"
                   />
                 </div>
                 <div>
@@ -179,7 +182,7 @@ export default function AdminProfile() {
                     value={profileData.department}
                     onChange={(e) => handleInputChange('department', e.target.value)}
                     disabled={!isEditing}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-700"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-700"
                   />
                 </div>
                 <div>
@@ -189,7 +192,7 @@ export default function AdminProfile() {
                     value={profileData.email}
                     onChange={(e) => handleInputChange('email', e.target.value)}
                     disabled={!isEditing}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-700"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-700"
                   />
                 </div>
                 <div>
@@ -199,7 +202,7 @@ export default function AdminProfile() {
                     value={profileData.manager}
                     onChange={(e) => handleInputChange('manager', e.target.value)}
                     disabled={!isEditing}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-700"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-700"
                   />
                 </div>
                 <div>
@@ -209,7 +212,7 @@ export default function AdminProfile() {
                     value={profileData.mobile}
                     onChange={(e) => handleInputChange('mobile', e.target.value)}
                     disabled={!isEditing}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-700"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-700"
                   />
                 </div>
                 <div>
@@ -219,7 +222,7 @@ export default function AdminProfile() {
                     value={profileData.location}
                     onChange={(e) => handleInputChange('location', e.target.value)}
                     disabled={!isEditing}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-700"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-700"
                   />
                 </div>
               </div>
@@ -233,10 +236,10 @@ export default function AdminProfile() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`px-6 py-3 font-medium transition-all ${
+                  className={`px-6 py-3 font-medium transition-all rounded-t-lg ${
                     activeTab === tab.id
-                      ? 'text-slate-600 border-b-2 border-slate-600'
-                      : 'text-gray-500 hover:text-gray-700'
+                      ? 'text-purple-700 bg-purple-50 border-b-2 border-purple-600'
+                      : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                   }`}
                 >
                   {tab.label}
@@ -250,9 +253,9 @@ export default function AdminProfile() {
             {activeTab === 'resume' && (
               <div className="space-y-8">
                 {/* About Section */}
-                <div className="bg-slate-50 rounded-lg p-6 border border-slate-200">
+                <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-lg p-6 border border-purple-200">
                   <div className="flex items-center gap-2 mb-3">
-                    <Briefcase size={20} className="text-slate-600" />
+                    <Briefcase size={20} className="text-purple-600" />
                     <h3 className="text-lg font-semibold text-gray-800">About</h3>
                   </div>
                   <textarea
@@ -260,20 +263,20 @@ export default function AdminProfile() {
                     onChange={(e) => handleInputChange('about', e.target.value)}
                     disabled={!isEditing}
                     rows={4}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent disabled:bg-white disabled:text-gray-700 resize-none"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-white disabled:text-gray-700 resize-none"
                   />
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Skills Section */}
-                  <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
+                  <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-lg p-6 border border-blue-200">
                     <div className="flex items-center gap-2 mb-4">
                       <Award size={20} className="text-blue-600" />
                       <h3 className="text-lg font-semibold text-gray-800">Skills</h3>
                     </div>
                     <div className="space-y-3">
                       {profileData.skills.map((skill, index) => (
-                        <div key={index} className="flex items-center justify-between bg-white px-4 py-2 rounded-lg">
+                        <div key={index} className="flex items-center justify-between bg-white px-4 py-2 rounded-lg shadow-sm">
                           <span className="text-gray-700">{skill}</span>
                           {isEditing && (
                             <button
@@ -307,14 +310,14 @@ export default function AdminProfile() {
                   </div>
 
                   {/* Certifications Section */}
-                  <div className="bg-green-50 rounded-lg p-6 border border-green-200">
+                  <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-6 border border-green-200">
                     <div className="flex items-center gap-2 mb-4">
                       <Award size={20} className="text-green-600" />
                       <h3 className="text-lg font-semibold text-gray-800">Certification</h3>
                     </div>
                     <div className="space-y-3">
                       {profileData.certifications.map((cert, index) => (
-                        <div key={index} className="flex items-center justify-between bg-white px-4 py-2 rounded-lg">
+                        <div key={index} className="flex items-center justify-between bg-white px-4 py-2 rounded-lg shadow-sm">
                           <span className="text-gray-700">{cert}</span>
                           {isEditing && (
                             <button
@@ -349,7 +352,7 @@ export default function AdminProfile() {
                 </div>
 
                 {/* Interests Section */}
-                <div className="bg-purple-50 rounded-lg p-6 border border-purple-200">
+                <div className="bg-gradient-to-br from-pink-50 to-purple-50 rounded-lg p-6 border border-pink-200">
                   <h3 className="text-lg font-semibold text-gray-800 mb-3">My interests and hobbies</h3>
                   <textarea
                     value={profileData.interests}
@@ -364,8 +367,8 @@ export default function AdminProfile() {
 
             {activeTab === 'private' && (
               <div className="text-center py-8">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-slate-100 rounded-full mb-4">
-                  <User className="w-8 h-8 text-slate-600" />
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-purple-100 rounded-full mb-4">
+                  <User className="w-8 h-8 text-purple-600" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-800 mb-2">Private Information</h3>
                 <p className="text-gray-500">Admin private information section</p>
@@ -380,22 +383,22 @@ export default function AdminProfile() {
 
                 {/* Salary Overview */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg p-6 text-white">
+                  <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg p-6 text-white shadow-lg">
                     <p className="text-blue-100 text-sm mb-1">Monthly Wage</p>
                     <p className="text-3xl font-bold">₹{profileData.monthlyWage.toLocaleString()}</p>
                     <p className="text-blue-100 text-sm mt-1">/ Month</p>
                   </div>
-                  <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg p-6 text-white">
+                  <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg p-6 text-white shadow-lg">
                     <p className="text-green-100 text-sm mb-1">Yearly Wage</p>
                     <p className="text-3xl font-bold">₹{profileData.yearlyWage.toLocaleString()}</p>
                     <p className="text-green-100 text-sm mt-1">/ Yearly</p>
                   </div>
-                  <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg p-6 text-white">
+                  <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg p-6 text-white shadow-lg">
                     <p className="text-purple-100 text-sm mb-1">Working Days</p>
                     <p className="text-3xl font-bold">{profileData.workingDays}</p>
                     <p className="text-purple-100 text-sm mt-1">days/week</p>
                   </div>
-                  <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg p-6 text-white">
+                  <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg p-6 text-white shadow-lg">
                     <p className="text-orange-100 text-sm mb-1">Break Time</p>
                     <p className="text-3xl font-bold">{profileData.breakTime}</p>
                     <p className="text-orange-100 text-sm mt-1">hours</p>
@@ -403,8 +406,8 @@ export default function AdminProfile() {
                 </div>
 
                 {/* Salary Components */}
-                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                  <div className="bg-gradient-to-r from-slate-600 to-slate-700 px-6 py-4">
+                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-lg">
+                  <div className="bg-gradient-to-r from-purple-600 to-indigo-700 px-6 py-4">
                     <h3 className="text-lg font-semibold text-white">Salary Components</h3>
                   </div>
                   <div className="overflow-x-auto">
@@ -435,7 +438,7 @@ export default function AdminProfile() {
                 </div>
 
                 {/* Provident Fund */}
-                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-lg">
                   <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
                     <h3 className="text-lg font-semibold text-white">Provident Fund (PF) Contribution</h3>
                   </div>
@@ -467,7 +470,7 @@ export default function AdminProfile() {
                 </div>
 
                 {/* Tax Deductions */}
-                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-lg">
                   <div className="bg-gradient-to-r from-red-600 to-red-700 px-6 py-4">
                     <h3 className="text-lg font-semibold text-white">Tax Deductions</h3>
                   </div>
@@ -504,7 +507,7 @@ export default function AdminProfile() {
             <div className="px-8 pb-8">
               <button
                 onClick={() => setIsEditing(false)}
-                className="w-full md:w-auto px-8 py-3 bg-green-500 hover:bg-green-600 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+                className="w-full md:w-auto px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-medium rounded-lg transition-all shadow-lg flex items-center justify-center gap-2"
               >
                 <Save size={20} />
                 Save Changes
