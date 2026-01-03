@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { User, Mail, Phone, Building2, MapPin, Calendar, Edit2, Save, X, Loader2, Users, Search } from 'lucide-react';
 import { getProfile, updateProfile, updatePersonalInfo } from '../../api/auth.api';
 import api from '../../services/api';
+import { toast } from 'react-toastify';
 
 const getUserProfile = async (userId) => {
   const res = await api.get(`/profile/user/${userId}`);

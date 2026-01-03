@@ -1,27 +1,87 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, LogOut, User, Clock, CheckCircle, XCircle, Coffee } from 'lucide-react';
+import { Search, LogOut, User, Clock, CheckCircle, XCircle, Coffee, DollarSign, FileText, BarChart3 } from 'lucide-react';
 import EmployeeAttendance from '../attendance/EmployeeAttendance';
 import EmployeeTimeOff from '../leave/EmployeeTimeOff';
+import { getAllUsers } from '../../api/user.api';
+import { getAllAttendance } from '../../api/attendance.api';
+import { toast } from 'react-toastify';
 
 const EmployeeDashboard = ({ user, onLogout }) => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [employees, setEmployees] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [stats, setStats] = useState({
+    presentToday: 0,
+    onLeave: 0,
+    absent: 0,
+  });
   const navigate = useNavigate();
 
-  // Sample employee data
-  const employees = [
-    { id: 1, name: 'Sarah Johnson', status: 'present', avatar: 'SJ', checkIn: '09:00 AM' },
-    { id: 2, name: 'Michael Chen', status: 'present', avatar: 'MC', checkIn: '08:45 AM' },
-    { id: 3, name: 'Emma Williams', status: 'leave', avatar: 'EW', checkIn: null },
-    { id: 4, name: 'James Brown', status: 'present', avatar: 'JB', checkIn: '09:15 AM' },
-    { id: 5, name: 'Olivia Davis', status: 'absent', avatar: 'OD', checkIn: null },
-    { id: 6, name: 'Robert Miller', status: 'present', avatar: 'RM', checkIn: '08:30 AM' },
-    { id: 7, name: 'Sophia Garcia', status: 'present', avatar: 'SG', checkIn: '09:00 AM' },
-    { id: 8, name: 'William Wilson', status: 'leave', avatar: 'WW', checkIn: null },
-    { id: 9, name: 'Ava Martinez', status: 'present', avatar: 'AM', checkIn: '08:50 AM' },
-  ];
+  const userRole = user?.role || (() => {
+    const userData = localStorage.getItem('user');
+    return userData ? JSON.parse(userData).role : 'EMPLOYEE';
+  })();
+  const isHRorAdmin = userRole === 'HR' || userRole === 'ADMIN';
+
+  useEffect(() => {
+    if (isHRorAdmin && activeTab === 'dashboard') {
+      loadEmployees();
+      loadStats();
+    }
+  }, [isHRorAdmin, activeTab]);
+
+  const loadEmployees = async () => {
+    try {
+      setLoading(true);
+      const allUsers = await getAllUsers();
+      // Filter out current user and get employees with attendance status
+      const today = new Date().toISOString().split('T')[0];
+      const attendanceData = await getAllAttendance({ month: new Date().getMonth() + 1, year: new Date().getFullYear() });
+      
+      const employeesWithStatus = allUsers
+        .filter(u => u.role === 'EMPLOYEE')
+        .map(emp => {
+          const todayAttendance = attendanceData.find(a => 
+            a.user?._id === emp._id && 
+            new Date(a.date).toISOString().split('T')[0] === today
+          );
+          return {
+            id: emp._id,
+            name: emp.fullName || `${emp.firstName} ${emp.lastName}`,
+            status: todayAttendance ? (todayAttendance.status === 'PRESENT' ? 'present' : 'absent') : 'absent',
+            avatar: (emp.fullName || emp.firstName || 'E').charAt(0).toUpperCase(),
+            checkIn: todayAttendance?.checkIn ? new Date(todayAttendance.checkIn).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : null,
+            email: emp.email,
+            role: emp.role,
+          };
+        });
+      setEmployees(employeesWithStatus);
+    } catch (error) {
+      console.error('Error loading employees:', error);
+      toast.error('Failed to load employees');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadStats = async () => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const attendanceData = await getAllAttendance({ month: new Date().getMonth() + 1, year: new Date().getFullYear() });
+      const todayRecords = attendanceData.filter(a => new Date(a.date).toISOString().split('T')[0] === today);
+      
+      setStats({
+        presentToday: todayRecords.filter(a => a.status === 'PRESENT').length,
+        onLeave: todayRecords.filter(a => a.status === 'ON_LEAVE').length,
+        absent: todayRecords.filter(a => a.status === 'ABSENT').length,
+      });
+    } catch (error) {
+      console.error('Error loading stats:', error);
+    }
+  };
 
   const getStatusIcon = (status) => {
     switch(status) {
@@ -72,7 +132,7 @@ const EmployeeDashboard = ({ user, onLogout }) => {
               
               {/* Tabs */}
               <nav className="flex space-x-1 bg-gray-100 rounded-lg p-1">
-                {['dashboard', 'attendance', 'time-off'].map((tab) => (
+                {['dashboard', 'attendance', 'time-off', ...(isHRorAdmin ? ['payroll', 'analytics'] : [])].map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
@@ -95,11 +155,13 @@ const EmployeeDashboard = ({ user, onLogout }) => {
                 className="flex items-center space-x-3 hover:bg-gray-50 rounded-xl px-3 py-2 transition-all duration-200"
               >
                 <div className="w-10 h-10 bg-gradient-to-br from-pink-500 to-orange-500 rounded-full flex items-center justify-center shadow-md">
-                  <span className="text-white font-semibold text-sm">AD</span>
+                  <span className="text-white font-semibold text-sm">
+                    {user?.fullName?.charAt(0) || user?.firstName?.charAt(0) || 'U'}
+                  </span>
                 </div>
                 <div className="hidden md:block text-left">
-                  <p className="text-sm font-semibold text-gray-900">Admin User</p>
-                  <p className="text-xs text-gray-500">Administrator</p>
+                  <p className="text-sm font-semibold text-gray-900">{user?.fullName || user?.firstName || 'User'}</p>
+                  <p className="text-xs text-gray-500">{user?.role || 'Employee'}</p>
                 </div>
               </button>
 
@@ -140,113 +202,183 @@ const EmployeeDashboard = ({ user, onLogout }) => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {activeTab === 'attendance' ? (
           <EmployeeAttendance />
+        ) : activeTab === 'time-off' ? (
+          <EmployeeTimeOff />
+        ) : activeTab === 'payroll' ? (
+          <div className="text-center py-12">
+            <DollarSign className="w-16 h-16 text-indigo-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">Payroll Management</h2>
+            <p className="text-gray-600 mb-6">Access your payroll information</p>
+            <button
+              onClick={() => navigate('/payroll')}
+              className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all"
+            >
+              View Payroll
+            </button>
+          </div>
+        ) : activeTab === 'analytics' ? (
+          <div className="text-center py-12">
+            <BarChart3 className="w-16 h-16 text-indigo-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">Analytics & Reports</h2>
+            <p className="text-gray-600 mb-6">View comprehensive reports and analytics</p>
+            <button
+              onClick={() => navigate('/analytics')}
+              className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all"
+            >
+              View Analytics
+            </button>
+          </div>
         ) : activeTab === 'dashboard' ? (
           <>
-            {/* Search and Actions Bar */}
-            <div className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
-              <div className="flex-1 max-w-md">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <input
-                    type="text"
-                    placeholder="Search employees..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all shadow-sm"
-                  />
-                </div>
-              </div>
-              
-              <button className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-medium shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 flex items-center space-x-2">
-                <span className="text-lg">+</span>
-                <span>NEW</span>
-              </button>
-            </div>
-
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              <div className="bg-white rounded-2xl p-6 shadow-md border border-emerald-100 hover:shadow-lg transition-shadow">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600 font-medium">Present Today</p>
-                    <p className="text-3xl font-bold text-emerald-600 mt-1">6</p>
-                  </div>
-                  <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
-                    <CheckCircle className="w-6 h-6 text-emerald-600" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-2xl p-6 shadow-md border border-amber-100 hover:shadow-lg transition-shadow">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600 font-medium">On Leave</p>
-                    <p className="text-3xl font-bold text-amber-600 mt-1">2</p>
-                  </div>
-                  <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center">
-                    <Coffee className="w-6 h-6 text-amber-600" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-2xl p-6 shadow-md border border-rose-100 hover:shadow-lg transition-shadow">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600 font-medium">Absent</p>
-                    <p className="text-3xl font-bold text-rose-600 mt-1">1</p>
-                  </div>
-                  <div className="w-12 h-12 bg-rose-100 rounded-xl flex items-center justify-center">
-                    <XCircle className="w-6 h-6 text-rose-600" />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Employee Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredEmployees.map((employee) => (
-                <div
-                  key={employee.id}
-                  className={`bg-white rounded-2xl p-6 shadow-md border-2 hover:shadow-xl transition-all duration-300 hover:scale-105 ${getStatusColor(employee.status)}`}
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-lg">
-                        <span className="text-white font-bold text-lg">{employee.avatar}</span>
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-gray-900 text-sm">{employee.name}</h3>
-                        <p className="text-xs text-gray-500 mt-0.5">Employee</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white shadow-sm">
-                      {getStatusIcon(employee.status)}
+            {isHRorAdmin ? (
+              <>
+                {/* Search and Actions Bar */}
+                <div className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+                  <div className="flex-1 max-w-md">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                      <input
+                        type="text"
+                        placeholder="Search employees..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all shadow-sm"
+                      />
                     </div>
                   </div>
-
-                  {employee.checkIn && (
-                    <div className="flex items-center space-x-2 bg-white bg-opacity-70 rounded-lg px-3 py-2">
-                      <Clock className="w-4 h-4 text-indigo-600" />
-                      <span className="text-sm text-gray-700 font-medium">Since {employee.checkIn}</span>
-                    </div>
-                  )}
-
-                  {!employee.checkIn && (
-                    <div className="flex items-center justify-center bg-white bg-opacity-70 rounded-lg px-3 py-2">
-                      <span className="text-sm text-gray-600 font-medium capitalize">{employee.status}</span>
-                    </div>
-                  )}
-
-                  <button className="w-full mt-4 py-2 bg-white hover:bg-gray-50 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 transition-colors shadow-sm">
-                    Check In →
+                  
+                  <button 
+                    onClick={() => navigate('/profile')}
+                    className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-medium shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 flex items-center space-x-2"
+                  >
+                    <span className="text-lg">+</span>
+                    <span>Manage Employees</span>
                   </button>
                 </div>
-              ))}
-            </div>
+
+                {/* Stats Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                  <div className="bg-white rounded-2xl p-6 shadow-md border border-emerald-100 hover:shadow-lg transition-shadow">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-gray-600 font-medium">Present Today</p>
+                        <p className="text-3xl font-bold text-emerald-600 mt-1">{stats.presentToday}</p>
+                      </div>
+                      <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
+                        <CheckCircle className="w-6 h-6 text-emerald-600" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-2xl p-6 shadow-md border border-amber-100 hover:shadow-lg transition-shadow">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-gray-600 font-medium">On Leave</p>
+                        <p className="text-3xl font-bold text-amber-600 mt-1">{stats.onLeave}</p>
+                      </div>
+                      <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center">
+                        <Coffee className="w-6 h-6 text-amber-600" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-2xl p-6 shadow-md border border-rose-100 hover:shadow-lg transition-shadow">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-gray-600 font-medium">Absent</p>
+                        <p className="text-3xl font-bold text-rose-600 mt-1">{stats.absent}</p>
+                      </div>
+                      <div className="w-12 h-12 bg-rose-100 rounded-xl flex items-center justify-center">
+                        <XCircle className="w-6 h-6 text-rose-600" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Employee Grid */}
+                {loading ? (
+                  <div className="text-center py-12">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+                    <p className="mt-4 text-gray-600">Loading employees...</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {employees
+                      .filter(emp => emp.name.toLowerCase().includes(searchQuery.toLowerCase()))
+                      .map((employee) => (
+                        <div
+                          key={employee.id}
+                          className={`bg-white rounded-2xl p-6 shadow-md border-2 hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer ${getStatusColor(employee.status)}`}
+                          onClick={() => navigate(`/profile?employeeId=${employee.id}`)}
+                        >
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-lg">
+                                <span className="text-white font-bold text-lg">{employee.avatar}</span>
+                              </div>
+                              <div>
+                                <h3 className="font-semibold text-gray-900 text-sm">{employee.name}</h3>
+                                <p className="text-xs text-gray-500 mt-0.5">{employee.email}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white shadow-sm">
+                              {getStatusIcon(employee.status)}
+                            </div>
+                          </div>
+
+                          {employee.checkIn && (
+                            <div className="flex items-center space-x-2 bg-white bg-opacity-70 rounded-lg px-3 py-2">
+                              <Clock className="w-4 h-4 text-indigo-600" />
+                              <span className="text-sm text-gray-700 font-medium">Since {employee.checkIn}</span>
+                            </div>
+                          )}
+
+                          {!employee.checkIn && (
+                            <div className="flex items-center justify-center bg-white bg-opacity-70 rounded-lg px-3 py-2">
+                              <span className="text-sm text-gray-600 font-medium capitalize">{employee.status}</span>
+                            </div>
+                          )}
+
+                          <button className="w-full mt-4 py-2 bg-white hover:bg-gray-50 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 transition-colors shadow-sm">
+                            View Profile →
+                          </button>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="bg-white rounded-2xl p-12 shadow-lg text-center">
+                <User className="w-16 h-16 text-indigo-500 mx-auto mb-4" />
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">Welcome to Your Dashboard</h2>
+                <p className="text-gray-600 mb-6">You can manage your attendance, leave requests, and view your payroll information.</p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+                  <button
+                    onClick={() => setActiveTab('attendance')}
+                    className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl hover:shadow-lg transition-all"
+                  >
+                    <Clock className="w-8 h-8 text-indigo-600 mx-auto mb-2" />
+                    <h3 className="font-semibold text-gray-800">Attendance</h3>
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('time-off')}
+                    className="p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl hover:shadow-lg transition-all"
+                  >
+                    <Coffee className="w-8 h-8 text-purple-600 mx-auto mb-2" />
+                    <h3 className="font-semibold text-gray-800">Time Off</h3>
+                  </button>
+                  <button
+                    onClick={() => navigate('/payroll')}
+                    className="p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl hover:shadow-lg transition-all"
+                  >
+                    <DollarSign className="w-8 h-8 text-green-600 mx-auto mb-2" />
+                    <h3 className="font-semibold text-gray-800">Payroll</h3>
+                  </button>
+                </div>
+              </div>
+            )}
           </>
-        ) : (
-          <EmployeeTimeOff />
-        )}
+        ) : null}
       </main>
     </div>
   );

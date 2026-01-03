@@ -6,13 +6,15 @@ import 'react-toastify/dist/ReactToastify.css';
 import LandingPage from './pages/Landing';
 import SignIn from './pages/auth/Login';
 import SignUp from './pages/auth/SignUp';
-import Profile from './pages/profile/Profile';
+import Profile from './pages/Profile/Profile';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import VerifyOtp from './pages/auth/VerifyOtp';
 import AuthCallback from './components/common/OAuthCallback';
 import Dashboard from './pages/dashboard/Dashboard';
 import ActivityPage from './pages/Activity';
 import AttendancePage from './pages/AttendancePage';
+import Payroll from './pages/payroll/Payroll';
+import Analytics from './pages/analytics/Analytics';
 import useAuth from './hooks/useAuth';
 
 const PrivateRoute = ({ children }) => {
@@ -67,6 +69,14 @@ function App() {
         <Route
           path="/activity"
           element={<PrivateRoute><ActivityPage /></PrivateRoute>}
+        />
+        <Route
+          path="/payroll"
+          element={<PrivateRoute><Payroll user={user} onLogout={handleLogout} /></PrivateRoute>}
+        />
+        <Route
+          path="/analytics"
+          element={<PrivateRoute><Analytics user={user} onLogout={handleLogout} /></PrivateRoute>}
         />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
