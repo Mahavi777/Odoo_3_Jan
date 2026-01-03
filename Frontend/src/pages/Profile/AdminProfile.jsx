@@ -1,12 +1,7 @@
 import React, { useState, useEffect } from 'react';
-<<<<<<< HEAD
 import { User, Mail, Phone, Building2, MapPin, Calendar, Edit2, Save, X, Plus, Trash2, Award, Briefcase } from 'lucide-react';
 import { getProfile, updateProfile } from '../../api/auth.api';
-=======
-import { User, Mail, Phone, Building2, MapPin, Calendar, Edit2, Save, X, Loader2, Users, Search } from 'lucide-react';
-import { getProfile, updateProfile, updatePersonalInfo } from '../../api/auth.api';
-import api from '../../services/api';
->>>>>>> 671ca5dd7e29650f2df2e7d4b72449c8de40e9af
+
 
 const getUserProfile = async (userId) => {
   const res = await api.get(`/profile/user/${userId}`);
@@ -29,9 +24,7 @@ export default function AdminProfile({ user, onLogout }) {
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
 
-<<<<<<< HEAD
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+
 
   useEffect(() => {
     const load = async () => {
@@ -92,14 +85,12 @@ export default function AdminProfile({ user, onLogout }) {
 
   const [newSkill, setNewSkill] = useState('');
   const [newCertification, setNewCertification] = useState('');
-=======
   useEffect(() => {
     loadProfile();
     if (activeTab === 'employees') {
       loadEmployees();
     }
   }, [activeTab]);
->>>>>>> 671ca5dd7e29650f2df2e7d4b72449c8de40e9af
 
   const loadProfile = async () => {
     try {
@@ -153,46 +144,6 @@ export default function AdminProfile({ user, onLogout }) {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSave = async () => {
-    try {
-      setSaving(true);
-      
-      // Update main profile (Admin can update all fields)
-      const profileUpdate = {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        fullName: `${formData.firstName} ${formData.lastName}`.trim(),
-        phone: formData.phone,
-        jobPosition: formData.jobPosition,
-        department: formData.department,
-        location: formData.location,
-        dateOfJoining: formData.dateOfJoining,
-        status: formData.status,
-      };
-
-      await updateProfile(profileUpdate);
-
-      // Update personal info
-      await updatePersonalInfo({
-        address: formData.address,
-        phone: formData.phone,
-        personalEmail: formData.personalEmail,
-        gender: formData.gender,
-        dateOfBirth: formData.dateOfBirth,
-        maritalStatus: formData.maritalStatus,
-        nationality: formData.nationality,
-      });
-
-      toast.success('Profile updated successfully!');
-      setIsEditing(false);
-      loadProfile();
-    } catch (error) {
-      console.error('Error saving profile:', error);
-      toast.error(error.response?.data?.message || 'Failed to update profile');
-    } finally {
-      setSaving(false);
-    }
-  };
 
   const handleEmployeeSelect = async (employeeId) => {
     try {
@@ -580,18 +531,15 @@ export default function AdminProfile({ user, onLogout }) {
           {isEditing && (
             <div className="px-8 pb-8">
               <button
-<<<<<<< HEAD
                 onClick={handleSave}
                 disabled={saving}
                 className="w-full md:w-auto px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-medium rounded-lg transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-60"
               >
                 <Save size={20} />
                 {saving ? 'Saving...' : 'Save Changes'}
-=======
                 onClick={isManagingEmployee ? handleEmployeeSave : handleSave}
                 disabled={saving}
                 className="w-full md:w-auto px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-medium rounded-lg transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
                 {saving ? (
                   <>
                     <Loader2 className="animate-spin" size={20} />
@@ -603,7 +551,6 @@ export default function AdminProfile({ user, onLogout }) {
                     Save Changes
                   </>
                 )}
->>>>>>> 671ca5dd7e29650f2df2e7d4b72449c8de40e9af
               </button>
             </div>
           )}
