@@ -1,13 +1,13 @@
-const Attendance = require('../models/Attendance');
-const Activity = require('../models/Activity');
-const User = require('../models/User');
+import Attendance from '../models/Attendance.js';
+import Activity from '../models/Activity.js';
+import User from '../models/User.js';
 
 function startOfDay(date) {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
 
 // POST /api/attendance/checkin
-const checkIn = async (req, res) => {
+export const checkIn = async (req, res) => {
   try {
     const userId = req.user.id;
     const today = startOfDay(new Date());
@@ -37,7 +37,7 @@ const checkIn = async (req, res) => {
 };
 
 // POST /api/attendance/checkout
-const checkOut = async (req, res) => {
+export const checkOut = async (req, res) => {
   try {
     const userId = req.user.id;
     const today = startOfDay(new Date());
@@ -66,7 +66,7 @@ const checkOut = async (req, res) => {
 };
 
 // GET /api/attendance/me?month=MM&year=YYYY
-const getMyAttendance = async (req, res) => {
+export const getMyAttendance = async (req, res) => {
   try {
     const userId = req.user.id;
     const { month, year } = req.query;
@@ -89,7 +89,7 @@ const getMyAttendance = async (req, res) => {
 };
 
 // GET /api/attendance/user/:id?month=MM&year=YYYY
-const getAttendanceForUser = async (req, res) => {
+export const getAttendanceForUser = async (req, res) => {
   try {
     const userId = req.params.id;
     const { month, year } = req.query;
@@ -111,4 +111,25 @@ const getAttendanceForUser = async (req, res) => {
   }
 };
 
-module.exports = { checkIn, checkOut, getMyAttendance, getAttendanceForUser };
+// GET /api/attendance/all?month=MM&year=YYYY&userId=...
+export const getAllAttendance = async (req, res) => {
+  try {
+    const { month, year, userId } = req.query;
+    let filter = {};
+    if (userId) filter.user = userId;
+    if (month && year) {
+      const m = parseInt(month, 10) - 1;
+      const y = parseInt(year, 10);
+      const from = new Date(y, m, 1);
+      const to = new Date(y, m + 1, 1);
+      filter.date = { $gte: from, $lt: to };
+    }
+
+    const records = await Attendance.find(filter).populate('user', 'fullName email profileImage role').sort({ date: -1 });
+    res.json(records);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+

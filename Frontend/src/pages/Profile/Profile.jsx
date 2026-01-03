@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Input from '../../components/common/Input';
 import Button from '../../components/common/Button';
+import { getProfile, updateProfile } from '../../api/auth.api';
 
 const Profile = ({ user, onLogout }) => {
   const [profile, setProfile] = useState(null);
@@ -11,14 +12,26 @@ const Profile = ({ user, onLogout }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Fetch user profile
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      const parsedUser = JSON.parse(userData);
-      setProfile(parsedUser);
-      setFormData(parsedUser);
-    }
-    setLoading(false);
+    // Fetch user profile from server; fall back to localStorage
+    const load = async () => {
+      try {
+        const data = await getProfile();
+        setProfile(data);
+        setFormData(data);
+        // keep local cache in sync
+        localStorage.setItem('user', JSON.stringify(data));
+      } catch (err) {
+        const userData = localStorage.getItem('user');
+        if (userData) {
+          const parsedUser = JSON.parse(userData);
+          setProfile(parsedUser);
+          setFormData(parsedUser);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
   }, []);
 
   const handleChange = (e) => {
@@ -28,8 +41,16 @@ const Profile = ({ user, onLogout }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Update profile API call here
-    setEditing(false);
+    try {
+      const updated = await updateProfile(formData);
+      setProfile(updated);
+      setFormData(updated);
+      localStorage.setItem('user', JSON.stringify(updated));
+      setEditing(false);
+    } catch (err) {
+      console.error('Failed to update profile', err);
+      alert(err?.response?.data?.message || 'Update failed');
+    }
   };
 
   const handleLogout = () => {

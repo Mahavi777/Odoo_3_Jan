@@ -1,11 +1,14 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const { protect } = require('../middleware/auth.middleware');
-const attendanceController = require('../controllers/attendance.controller');
+import { protect, requireRole } from '../middleware/auth.middleware.js';
+import * as attendanceController from '../controllers/attendance.controller.js';
 
 router.post('/checkin', protect, attendanceController.checkIn);
 router.post('/checkout', protect, attendanceController.checkOut);
 router.get('/me', protect, attendanceController.getMyAttendance);
 router.get('/user/:id', protect, attendanceController.getAttendanceForUser);
 
-module.exports = router;
+// Admin/HR: list all attendance (optional filters)
+router.get('/all', protect, requireRole(['ADMIN', 'HR']), attendanceController.getAllAttendance);
+
+export default router;

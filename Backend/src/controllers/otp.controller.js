@@ -1,10 +1,10 @@
-const crypto = require('crypto');
-const bcrypt = require('bcrypt');
-const nodemailer = require('nodemailer');
-const rateLimit = require('express-rate-limit');
+import crypto from 'crypto';
+import bcrypt from 'bcrypt';
+import nodemailer from 'nodemailer';
+import rateLimit from 'express-rate-limit';
 
-const User = require('../models/User');
-const Otp = require('../models/Otp');
+import User from '../models/User.js';
+import Otp from '../models/Otp.js';
 
 // --- Nodemailer Configuration ---
 const transporter = nodemailer.createTransport({
@@ -16,7 +16,7 @@ const transporter = nodemailer.createTransport({
 });
 
 // --- Rate Limiting ---
-const otpRequestLimiter = rateLimit({
+export const otpRequestLimiter = rateLimit({
     windowMs: 60 * 1000, // 1 minute
     max: 1, // Limit each IP to 1 OTP request per windowMs
     message: { success: false, message: 'Too many OTP requests. Please try again in a minute.' },
@@ -24,7 +24,7 @@ const otpRequestLimiter = rateLimit({
     legacyHeaders: false,
 });
 
-const otpVerifyLimiter = rateLimit({
+export const otpVerifyLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 5, // Limit each IP to 5 verification attempts per windowMs
     message: { success: false, message: 'Too many verification attempts. Please try again later.' },
@@ -40,7 +40,7 @@ const otpVerifyLimiter = rateLimit({
  * @desc    Request a password reset OTP
  * @access  Public
  */
-const requestOtp = async (req, res) => {
+export const requestOtp = async (req, res) => {
     const { email } = req.body;
     if (!email) {
         return res.status(400).json({ success: false, message: 'Email is required.' });
@@ -96,7 +96,7 @@ const requestOtp = async (req, res) => {
  * @desc    Verify the OTP
  * @access  Public
  */
-const verifyOtp = async (req, res) => {
+export const verifyOtp = async (req, res) => {
     const { email, otp } = req.body;
     if (!email || !otp) {
         return res.status(400).json({ success: false, message: 'Email and OTP are required.' });
@@ -134,7 +134,7 @@ const verifyOtp = async (req, res) => {
  * @desc    Change the user's password after OTP verification
  * @access  Public
  */
-const changePassword = async (req, res) => {
+export const changePassword = async (req, res) => {
     const { email, newPassword } = req.body;
     if (!email || !newPassword) {
         return res.status(400).json({ success: false, message: 'Email and new password are required.' });
@@ -171,6 +171,3 @@ const changePassword = async (req, res) => {
         res.status(500).json({ success: false, message: 'Server error.' });
     }
 };
-
-
-module.exports = { requestOtp, verifyOtp, changePassword, otpRequestLimiter, otpVerifyLimiter };

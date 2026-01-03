@@ -1,10 +1,10 @@
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+import jwt from 'jsonwebtoken';
+import User from '../models/User.js';
 
 /* =========================
    AUTH PROTECT MIDDLEWARE
 ========================= */
-const protect = async (req, res, next) => {
+export const protect = async (req, res, next) => {
   let token;
 
   if (
@@ -40,7 +40,7 @@ const protect = async (req, res, next) => {
 /* =========================
    ROLE BASED ACCESS
 ========================= */
-const requireRole = (roles = []) => {
+export const requireRole = (roles = []) => {
   return (req, res, next) => {
     if (!req.user || !roles.includes(req.user.role)) {
       return res.status(403).json({
@@ -49,12 +49,4 @@ const requireRole = (roles = []) => {
     }
     next();
   };
-};
-
-/* =========================
-   EXPORTS (VERY IMPORTANT)
-========================= */
-module.exports = {
-  protect,
-  requireRole
 };

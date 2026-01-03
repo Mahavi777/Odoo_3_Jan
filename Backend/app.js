@@ -1,19 +1,25 @@
-// 1. Load environment variables at the very top. This is crucial.
-const dotenvResult = require('dotenv').config();
+import dotenv from 'dotenv';
+import mongoose from 'mongoose';
+import express from 'express';
+import cors from 'cors';
+import path from 'path';
+import passport from 'passport';
+import { fileURLToPath } from 'url';
 
-const aiRoutes = require('./src/routes/ai.routes.js');
-const mongoose = require('mongoose');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-if (dotenvResult.error) {
-  console.error('Error loading .env file:', dotenvResult.error);
-} else {
-  console.log('Successfully loaded .env file. Parsed variables:', dotenvResult.parsed);
-}
+dotenv.config();
 
-const express = require('express');
-const cors = require('cors');
-const path = require('path');
-const passport = require('passport');
+import aiRoutes from './src/routes/ai.routes.js';
+import otpRoutes from './src/routes/otp.routes.js';
+import passwordResetRoutes from './src/routes/passwordReset.routes.js';
+import authRoutes from './src/routes/auth.routes.js';
+import profileRoutes from './src/routes/profile.routes.js';
+import userRoutes from './src/routes/user.routes.js';
+import attendanceRoutes from './src/routes/attendance.routes.js';
+import dashboardRoutes from './src/routes/dashboard.routes.js';
+import connectDB from './src/config/db.js';
 
 const app = express();
 
@@ -36,11 +42,10 @@ app.use("/api/ai", aiRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // this line to enable your OTP routes
-app.use('/api/otp', require('./src/routes/otp.routes.js'));
-app.use('/api/password-reset', require('./src/routes/passwordReset.routes.js'));
+app.use('/api/otp', otpRoutes);
+app.use('/api/password-reset', passwordResetRoutes);
 
 
-const connectDB = require('./src/config/db.js');
 connectDB();
 
 // Handle other connection events
@@ -53,12 +58,12 @@ mongoose.connection.on('disconnected', () => {
 });
 
 // Mount the auth routes
-app.use('/api/auth', require('./src/routes/auth.routes.js'));
-app.use('/api/profile', require('./src/routes/profile.routes.js'));
-app.use('/api/users', require('./src/routes/user.routes.js'));
+app.use('/api/auth', authRoutes);
+app.use('/api/profile', profileRoutes);
+app.use('/api/users', userRoutes);
 // Mount attendance and dashboard routes
-app.use('/api/attendance', require('./src/routes/attendance.routes.js'));
-app.use('/api/dashboard', require('./src/routes/dashboard.routes.js'));
+app.use('/api/attendance', attendanceRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 
 const PORT = process.env.PORT || 5000;

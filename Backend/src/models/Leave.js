@@ -1,5 +1,5 @@
-const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
+import mongoose from 'mongoose';
+const { Schema } = mongoose;
 
 const leaveSchema = new Schema({
   user: {
@@ -37,4 +37,4 @@ const leaveSchema = new Schema({
   timestamps: true,
 });
 
-module.exports = mongoose.model('Leave', leaveSchema);
+export default mongoose.model('Leave', leaveSchema);

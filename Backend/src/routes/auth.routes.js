@@ -1,6 +1,6 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const authController = require('../controllers/auth.controller');
+import * as authController from '../controllers/auth.controller.js';
 
 router.post('/signup', authController.signup);
 router.post('/signin', authController.signin);
@@ -10,4 +10,4 @@ router.get('/google', authController.googleAuth);
 router.get('/google/callback', authController.googleAuthCallback);
 router.get('/github/callback', authController.githubCallback);
 
-module.exports = router;
+export default router;

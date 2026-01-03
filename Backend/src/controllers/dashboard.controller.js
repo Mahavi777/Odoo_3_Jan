@@ -1,13 +1,13 @@
-const Attendance = require('../models/Attendance');
-const Activity = require('../models/Activity');
-const User = require('../models/User');
+import Attendance from '../models/Attendance.js';
+import Activity from '../models/Activity.js';
+import User from '../models/User.js';
 
 function startOfDay(date) {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
 
 // GET /api/dashboard
-const getDashboard = async (req, res) => {
+export const getDashboard = async (req, res) => {
   try {
     const today = startOfDay(new Date());
 
@@ -31,4 +31,3 @@ const getDashboard = async (req, res) => {
   }
 };
 
-module.exports = { getDashboard };
