@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Search, LogOut, User, Clock, CheckCircle, XCircle, Coffee, DollarSign, FileText, BarChart3 } from 'lucide-react';
 import EmployeeAttendance from '../attendance/EmployeeAttendance';
 import EmployeeTimeOff from '../leave/EmployeeTimeOff';
+import CheckInOut from '../../components/attendance/CheckInOut';
 import { getAllUsers } from '../../api/user.api';
 import { getAllAttendance } from '../../api/attendance.api';
 import { toast } from 'react-toastify';
@@ -348,17 +349,28 @@ const EmployeeDashboard = ({ user, onLogout }) => {
                 )}
               </>
             ) : (
-              <div className="bg-white rounded-2xl p-12 shadow-lg text-center">
-                <User className="w-16 h-16 text-indigo-500 mx-auto mb-4" />
-                <h2 className="text-2xl font-bold text-gray-800 mb-2">Welcome to Your Dashboard</h2>
-                <p className="text-gray-600 mb-6">You can manage your attendance, leave requests, and view your payroll information.</p>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+              <>
+                {/* Check In/Out Component for Employees */}
+                <div className="mb-6">
+                  <CheckInOut />
+                </div>
+
+                {/* Welcome Section */}
+                <div className="bg-white rounded-2xl p-12 shadow-lg text-center mb-6">
+                  <User className="w-16 h-16 text-indigo-500 mx-auto mb-4" />
+                  <h2 className="text-2xl font-bold text-gray-800 mb-2">Welcome to Your Dashboard</h2>
+                  <p className="text-gray-600 mb-6">You can manage your attendance, leave requests, and view your payroll information.</p>
+                </div>
+
+                {/* Quick Actions */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <button
                     onClick={() => setActiveTab('attendance')}
                     className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl hover:shadow-lg transition-all"
                   >
                     <Clock className="w-8 h-8 text-indigo-600 mx-auto mb-2" />
                     <h3 className="font-semibold text-gray-800">Attendance</h3>
+                    <p className="text-sm text-gray-600 mt-2">View your attendance records</p>
                   </button>
                   <button
                     onClick={() => setActiveTab('time-off')}
@@ -366,6 +378,7 @@ const EmployeeDashboard = ({ user, onLogout }) => {
                   >
                     <Coffee className="w-8 h-8 text-purple-600 mx-auto mb-2" />
                     <h3 className="font-semibold text-gray-800">Time Off</h3>
+                    <p className="text-sm text-gray-600 mt-2">Request and manage leaves</p>
                   </button>
                   <button
                     onClick={() => navigate('/payroll')}
@@ -373,9 +386,10 @@ const EmployeeDashboard = ({ user, onLogout }) => {
                   >
                     <DollarSign className="w-8 h-8 text-green-600 mx-auto mb-2" />
                     <h3 className="font-semibold text-gray-800">Payroll</h3>
+                    <p className="text-sm text-gray-600 mt-2">View your salary information</p>
                   </button>
                 </div>
-              </div>
+              </>
             )}
           </>
         ) : null}
