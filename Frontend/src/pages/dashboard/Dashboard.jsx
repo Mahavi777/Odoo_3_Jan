@@ -25,7 +25,7 @@ const Dashboard = ({ user, onLogout }) => {
   }
 
   // Render admin or employee dashboard based on role
-  if (userRole === 'admin') {
+  if (userRole === 'ADMIN' || userRole === 'HR') {
     return <AdminDashboard user={user} onLogout={onLogout} />;
   }
 

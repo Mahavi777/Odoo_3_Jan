@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, LogOut, User, Clock, CheckCircle, XCircle, Coffee } from 'lucide-react';
 import EmployeeAttendance from '../attendance/EmployeeAttendance';
+import EmployeeTimeOff from '../leave/EmployeeTimeOff';
 
 const EmployeeDashboard = ({ user, onLogout }) => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -244,10 +245,7 @@ const EmployeeDashboard = ({ user, onLogout }) => {
             </div>
           </>
         ) : (
-          <div className="bg-white rounded-2xl p-8 shadow-md">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Time Off</h2>
-            <p className="text-gray-600">Time off management coming soon...</p>
-          </div>
+          <EmployeeTimeOff />
         )}
       </main>
     </div>
