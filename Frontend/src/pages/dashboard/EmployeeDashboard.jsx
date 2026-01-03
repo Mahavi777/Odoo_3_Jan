@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from '../../components/common/Button';
+import { getDashboard } from '../../api/dashboard.api';
 
 const EmployeeDashboard = ({ user, onLogout }) => {
   const [stats, setStats] = useState({
@@ -14,13 +15,22 @@ const EmployeeDashboard = ({ user, onLogout }) => {
 
   useEffect(() => {
     // Fetch employee dashboard stats from API
-    setStats({
-      presentDays: 18,
-      absentDays: 2,
-      leavesBalance: 8,
-      upcomingLeaves: 1,
-    });
-    setLoading(false);
+    const load = async () => {
+      try {
+        const data = await getDashboard();
+        setStats({
+          presentDays: data.presentToday || 0,
+          absentDays: data.absentToday || 0,
+          leavesBalance: data.leaveToday || 0,
+          upcomingLeaves: data.recentActivities ? data.recentActivities.length : 0,
+        });
+      } catch (err) {
+        console.error('Failed to load dashboard', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
   }, []);
 
   const handleLogout = () => {

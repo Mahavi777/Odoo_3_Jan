@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { checkIn as apiCheckIn, checkOut as apiCheckOut, getMyAttendance } from '../../api/attendance.api';
 import { Calendar, Upload, X, Plus, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 
 export default function EmployeeTimeOff() {
@@ -35,6 +36,46 @@ export default function EmployeeTimeOff() {
       days: 4
     }
   ]);
+
+  const [todayAttendance, setTodayAttendance] = useState(null);
+
+  useEffect(() => {
+    const loadToday = async () => {
+      try {
+        const now = new Date();
+        const month = now.getMonth() + 1;
+        const year = now.getFullYear();
+        const records = await getMyAttendance(month, year);
+        // find today's record
+        const todayStr = new Date().toDateString();
+        const todayRec = records.find(r => new Date(r.date).toDateString() === todayStr) || null;
+        setTodayAttendance(todayRec);
+      } catch (err) {
+        console.error('Failed to load attendance', err);
+      }
+    };
+    loadToday();
+  }, []);
+
+  const handleCheckIn = async () => {
+    try {
+      const res = await apiCheckIn();
+      setTodayAttendance(res.attendance || res);
+    } catch (err) {
+      console.error('Check-in failed', err);
+      alert(err?.response?.data?.message || 'Check-in failed');
+    }
+  };
+
+  const handleCheckOut = async () => {
+    try {
+      const res = await apiCheckOut();
+      setTodayAttendance(res.attendance || res);
+    } catch (err) {
+      console.error('Check-out failed', err);
+      alert(err?.response?.data?.message || 'Check-out failed');
+    }
+  };
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -99,13 +140,31 @@ export default function EmployeeTimeOff() {
               <h1 className="text-3xl font-bold text-gray-800">Time Off</h1>
               <p className="text-gray-500 text-sm mt-1">For Employees View</p>
             </div>
-            <button
-              onClick={() => setShowRequestModal(true)}
-              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-medium rounded-lg transition-all shadow-md"
-            >
-              <Plus size={20} />
-              New Request
-            </button>
+
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleCheckIn}
+                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                >
+                  Check In
+                </button>
+                <button
+                  onClick={handleCheckOut}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                >
+                  Check Out
+                </button>
+              </div>
+
+              <button
+                onClick={() => setShowRequestModal(true)}
+                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-medium rounded-lg transition-all shadow-md"
+              >
+                <Plus size={20} />
+                New Request
+              </button>
+            </div>
           </div>
         </div>
 

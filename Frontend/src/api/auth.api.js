@@ -17,13 +17,13 @@ export const logout = async () => {
 };
 
 // --- existing functions (keep them as they are) ---
-export const getProfile = async (userId) => {
-  const res = await api.get(`/profile/${userId}`);
+export const getProfile = async () => {
+  const res = await api.get('/profile/me');
   return res.data;
 };
 
-export const updateProfile = async (userId, data) => {
-  const res = await api.put(`/profile/${userId}`, data);
+export const updateProfile = async (data) => {
+  const res = await api.put('/profile/me', data);
   return res.data;
 };
 

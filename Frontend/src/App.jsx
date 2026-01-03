@@ -12,6 +12,7 @@ import VerifyOtp from './pages/auth/VerifyOtp';
 import AuthCallback from './components/common/OAuthCallback';
 import Dashboard from './pages/dashboard/Dashboard';
 import ActivityPage from './pages/Activity';
+import AttendancePage from './pages/AttendancePage';
 import useAuth from './hooks/useAuth';
 
 const PrivateRoute = ({ children }) => {
@@ -58,6 +59,10 @@ function App() {
         <Route
           path="/profile"
           element={<PrivateRoute><Profile user={user} onLogout={handleLogout} /></PrivateRoute>}
+        />
+        <Route
+          path="/attendance"
+          element={<PrivateRoute><AttendancePage /></PrivateRoute>}
         />
         <Route
           path="/activity"
