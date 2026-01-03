@@ -2,16 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Input from '../../components/common/Input';
 import Button from '../../components/common/Button';
+<<<<<<< HEAD
 import { getProfile, updateProfile } from '../../api/auth.api';
+=======
+import { updateProfile } from '../../api/auth.api';
+>>>>>>> 15d7ad76538169606f6e8fd4280fd6bd0db3eebe
 
 const Profile = ({ user, onLogout }) => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({});
   const navigate = useNavigate();
 
   useEffect(() => {
+<<<<<<< HEAD
     // Fetch user profile from server; fall back to localStorage
     const load = async () => {
       try {
@@ -32,6 +38,25 @@ const Profile = ({ user, onLogout }) => {
       }
     };
     load();
+=======
+    // Fetch user profile
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      const parsedUser = JSON.parse(userData);
+      setProfile(parsedUser);
+      
+      // Ensure we have firstName and lastName
+      const firstName = parsedUser.firstName || (parsedUser.fullName ? parsedUser.fullName.split(' ')[0] : '');
+      const lastName = parsedUser.lastName || (parsedUser.fullName ? parsedUser.fullName.split(' ').slice(1).join(' ') : '');
+      
+      setFormData({
+        ...parsedUser,
+        firstName,
+        lastName,
+      });
+    }
+    setLoading(false);
+>>>>>>> 15d7ad76538169606f6e8fd4280fd6bd0db3eebe
   }, []);
 
   const handleChange = (e) => {
@@ -41,6 +66,7 @@ const Profile = ({ user, onLogout }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+<<<<<<< HEAD
     try {
       const updated = await updateProfile(formData);
       setProfile(updated);
@@ -51,6 +77,53 @@ const Profile = ({ user, onLogout }) => {
       console.error('Failed to update profile', err);
       alert(err?.response?.data?.message || 'Update failed');
     }
+=======
+    setError('');
+    setLoading(true);
+
+    try {
+      // Call update profile API
+      const updatedUser = await updateProfile(profile?.id || profile?._id, formData);
+      
+      // Update localStorage with new user data
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      setProfile(updatedUser);
+      setEditing(false);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to update profile');
+      console.error('Profile update error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEditClick = () => {
+    // Ensure formData is populated when entering edit mode
+    if (!formData.firstName && profile) {
+      const firstName = profile.firstName || (profile.fullName ? profile.fullName.split(' ')[0] : '');
+      const lastName = profile.lastName || (profile.fullName ? profile.fullName.split(' ').slice(1).join(' ') : '');
+      setFormData({
+        ...profile,
+        firstName,
+        lastName,
+      });
+    }
+    setEditing(true);
+  };
+
+  const handleCancel = () => {
+    // Reset form data when canceling
+    if (profile) {
+      const firstName = profile.firstName || (profile.fullName ? profile.fullName.split(' ')[0] : '');
+      const lastName = profile.lastName || (profile.fullName ? profile.fullName.split(' ').slice(1).join(' ') : '');
+      setFormData({
+        ...profile,
+        firstName,
+        lastName,
+      });
+    }
+    setEditing(false);
+>>>>>>> 15d7ad76538169606f6e8fd4280fd6bd0db3eebe
   };
 
   const handleLogout = () => {
@@ -60,7 +133,7 @@ const Profile = ({ user, onLogout }) => {
     navigate('/signin');
   };
 
-  if (loading) {
+  if (loading && !profile) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
 
@@ -76,6 +149,12 @@ const Profile = ({ user, onLogout }) => {
             Logout
           </Button>
         </div>
+
+        {error && (
+          <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
+            {error}
+          </div>
+        )}
 
         {!editing ? (
           <div className="space-y-6">
@@ -105,7 +184,7 @@ const Profile = ({ user, onLogout }) => {
             )}
 
             <Button
-              onClick={() => setEditing(true)}
+              onClick={handleEditClick}
               className="bg-indigo-600 hover:bg-indigo-700"
             >
               Edit Profile
@@ -117,25 +196,28 @@ const Profile = ({ user, onLogout }) => {
               label="First Name"
               type="text"
               name="firstName"
-              value={formData.firstName || ''}
+              value={formData?.firstName || ''}
               onChange={handleChange}
+              placeholder="Enter first name"
             />
 
             <Input
               label="Last Name"
               type="text"
               name="lastName"
-              value={formData.lastName || ''}
+              value={formData?.lastName || ''}
               onChange={handleChange}
+              placeholder="Enter last name"
             />
 
             <Input
               label="Email"
               type="email"
               name="email"
-              value={formData.email || ''}
+              value={formData?.email || ''}
               onChange={handleChange}
               disabled
+              placeholder="Enter email"
             />
 
             <div className="flex gap-4">
@@ -147,7 +229,7 @@ const Profile = ({ user, onLogout }) => {
               </Button>
               <Button
                 type="button"
-                onClick={() => setEditing(false)}
+                onClick={handleCancel}
                 className="bg-gray-600 hover:bg-gray-700"
               >
                 Cancel
