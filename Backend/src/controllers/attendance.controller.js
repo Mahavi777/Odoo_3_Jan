@@ -1,14 +1,24 @@
 import Attendance from '../models/Attendance.js';
 import Activity from '../models/Activity.js';
 import User from '../models/User.js';
+<<<<<<< HEAD
 import { startOfDay } from '../utils/date.util.js';
 import { generateDailyAttendance } from '../services/attendance.service.js';
+=======
+
+function startOfDay(date) {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+>>>>>>> 2d8b04120d7fd7b709cfea99b3a6f39997900c6b
 
 // POST /api/attendance/checkin
 export const checkIn = async (req, res) => {
   try {
     const userId = req.user.id;
     const today = startOfDay(new Date());
+    const checkInTime = new Date();
 
     let attendance = await Attendance.findOne({ user: userId, date: today });
     if (attendance && attendance.checkIn) {
@@ -16,9 +26,16 @@ export const checkIn = async (req, res) => {
     }
 
     if (!attendance) {
-      attendance = new Attendance({ user: userId, date: today, checkIn: new Date(), status: 'Present' });
+      attendance = new Attendance({ 
+        user: userId, 
+        date: today, 
+        checkIn: checkInTime,
+        checkInTime: checkInTime,
+        status: 'Present' 
+      });
     } else {
-      attendance.checkIn = new Date();
+      attendance.checkIn = checkInTime;
+      attendance.checkInTime = checkInTime;
       attendance.status = 'Present';
     }
 
@@ -27,7 +44,7 @@ export const checkIn = async (req, res) => {
     // log activity
     await Activity.create({ user: userId, activityType: 'login', description: 'Checked in' });
 
-    res.json({ message: 'Checked in', attendance });
+    res.json({ message: 'Checked in successfully', attendance });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
@@ -40,15 +57,20 @@ export const checkOut = async (req, res) => {
     const userId = req.user.id;
     const { breakTime } = req.body; // breakTime in minutes
     const today = startOfDay(new Date());
+    const checkOutTime = new Date();
 
     let attendance = await Attendance.findOne({ user: userId, date: today });
     if (!attendance) {
       return res.status(400).json({ message: 'No check-in found for today' });
     }
+    if (!attendance.checkIn) {
+      return res.status(400).json({ message: 'Please check in first before checking out' });
+    }
     if (attendance.checkOut) {
       return res.status(400).json({ message: 'Already checked out for today' });
     }
 
+<<<<<<< HEAD
     attendance.checkOut = new Date();
     attendance.breakTime = breakTime || 0;
 
@@ -62,12 +84,23 @@ export const checkOut = async (req, res) => {
     
     // if checkIn exists ensure status is Present
     attendance.status = attendance.status || 'Present';
+=======
+    attendance.checkOut = checkOutTime;
+    attendance.checkOutTime = checkOutTime;
+    attendance.status = 'Present';
+    
+    // Calculate total working hours
+    if (attendance.checkIn && attendance.checkOut) {
+      const diffMs = attendance.checkOut - attendance.checkIn;
+      attendance.totalWorkingHours = parseFloat((diffMs / (1000 * 60 * 60)).toFixed(2));
+    }
+>>>>>>> 2d8b04120d7fd7b709cfea99b3a6f39997900c6b
 
     await attendance.save();
 
     await Activity.create({ user: userId, activityType: 'login', description: 'Checked out' });
 
-    res.json({ message: 'Checked out', attendance });
+    res.json({ message: 'Checked out successfully', attendance });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
@@ -114,6 +147,32 @@ export const getAttendanceForUser = async (req, res) => {
 
     const records = await Attendance.find(filter).sort({ date: -1 });
     res.json(records);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// GET /api/attendance/today - Get today's attendance for logged-in user
+export const getTodayAttendance = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const today = startOfDay(new Date());
+
+    const attendance = await Attendance.findOne({ user: userId, date: today });
+    
+    if (!attendance) {
+      return res.json({ 
+        attendance: null, 
+        status: 'not_checked_in',
+        message: 'No attendance record for today' 
+      });
+    }
+
+    res.json({ 
+      attendance,
+      status: attendance.checkOut ? 'checked_out' : attendance.checkIn ? 'checked_in' : 'not_checked_in'
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });

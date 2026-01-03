@@ -10,6 +10,11 @@ export const checkOut = async () => {
 	return res.data;
 };
 
+export const getTodayAttendance = async () => {
+	const res = await api.get('/attendance/today');
+	return res.data;
+};
+
 export const getMyAttendance = async (month, year) => {
 	const params = {};
 	if (month && year) {
