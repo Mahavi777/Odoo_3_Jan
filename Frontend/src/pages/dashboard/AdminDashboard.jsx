@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from '../../components/common/Button';
 import { getDashboard } from '../../api/dashboard.api';
+import AdminAttendence from '../attendance/AdminAttendence';
 
 const AdminDashboard = ({ user, onLogout }) => {
   const [stats, setStats] = useState({
@@ -11,6 +12,7 @@ const AdminDashboard = ({ user, onLogout }) => {
     pendingApprovals: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('dashboard');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -48,72 +50,102 @@ const AdminDashboard = ({ user, onLogout }) => {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 py-6 flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-gray-800">Admin Dashboard</h1>
-          <Button
-            onClick={handleLogout}
-            className="bg-red-600 hover:bg-red-700 text-white"
-          >
-            Logout
-          </Button>
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <div className="flex justify-between items-center mb-4">
+            <h1 className="text-3xl font-bold text-gray-800">Admin Dashboard</h1>
+            <Button
+              onClick={handleLogout}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Logout
+            </Button>
+          </div>
+          
+          {/* Tabs */}
+          <nav className="flex space-x-1 bg-gray-100 rounded-lg p-1">
+            {['dashboard', 'attendance', 'time-off'].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                  activeTab === tab
+                    ? 'bg-white text-indigo-700 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                {tab.charAt(0).toUpperCase() + tab.slice(1).replace('-', ' ')}
+              </button>
+            ))}
+          </nav>
         </div>
       </div>
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-12">
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="text-gray-600 text-sm font-semibold">Total Employees</div>
-            <p className="text-4xl font-bold text-indigo-600 mt-2">{stats.totalEmployees}</p>
-          </div>
+        {activeTab === 'attendance' ? (
+          <AdminAttendence />
+        ) : activeTab === 'dashboard' ? (
+          <>
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="text-gray-600 text-sm font-semibold">Total Employees</div>
+                <p className="text-4xl font-bold text-indigo-600 mt-2">{stats.totalEmployees}</p>
+              </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="text-gray-600 text-sm font-semibold">Present Today</div>
-            <p className="text-4xl font-bold text-green-600 mt-2">{stats.presentToday}</p>
-          </div>
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="text-gray-600 text-sm font-semibold">Present Today</div>
+                <p className="text-4xl font-bold text-green-600 mt-2">{stats.presentToday}</p>
+              </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="text-gray-600 text-sm font-semibold">On Leave</div>
-            <p className="text-4xl font-bold text-yellow-600 mt-2">{stats.onLeave}</p>
-          </div>
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="text-gray-600 text-sm font-semibold">On Leave</div>
+                <p className="text-4xl font-bold text-yellow-600 mt-2">{stats.onLeave}</p>
+              </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="text-gray-600 text-sm font-semibold">Pending Approvals</div>
-            <p className="text-4xl font-bold text-orange-600 mt-2">{stats.pendingApprovals}</p>
-          </div>
-        </div>
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="text-gray-600 text-sm font-semibold">Pending Approvals</div>
+                <p className="text-4xl font-bold text-orange-600 mt-2">{stats.pendingApprovals}</p>
+              </div>
+            </div>
 
-        {/* Quick Actions */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-bold text-gray-800 mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Button
-              onClick={() => navigate('/attendance')}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              Manage Attendance
-            </Button>
-            <Button
-              onClick={() => navigate('/leave')}
-              className="bg-purple-600 hover:bg-purple-700"
-            >
-              Review Leave Requests
-            </Button>
-            <Button
-              onClick={() => navigate('/payroll')}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              Manage Payroll
-            </Button>
-            <Button
-              onClick={() => navigate('/profile')}
-              className="bg-gray-600 hover:bg-gray-700"
-            >
-              View Profile
-            </Button>
+            {/* Quick Actions */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-bold text-gray-800 mb-4">Quick Actions</h2>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <Button
+                  onClick={() => setActiveTab('attendance')}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  Manage Attendance
+                </Button>
+                <Button
+                  onClick={() => navigate('/leave')}
+                  className="bg-purple-600 hover:bg-purple-700"
+                >
+                  Review Leave Requests
+                </Button>
+                <Button
+                  onClick={() => navigate('/payroll')}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  Manage Payroll
+                </Button>
+                <Button
+                  onClick={() => navigate('/profile')}
+                  className="bg-gray-600 hover:bg-gray-700"
+                >
+                  View Profile
+                </Button>
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">Time Off Management</h2>
+            <p className="text-gray-600">Time off management coming soon...</p>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
