@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from '../../components/common/Button';
 import { getDashboard } from '../../api/dashboard.api';
+import { getAllLeaves } from '../../api/leave.api';
 import AdminAttendence from '../attendance/AdminAttendence';
+import AdminTimeOff from '../leave/AdminTimeOff';
 
 const AdminDashboard = ({ user, onLogout }) => {
   const [stats, setStats] = useState({
@@ -19,12 +21,15 @@ const AdminDashboard = ({ user, onLogout }) => {
     // Fetch dashboard stats from API
     const load = async () => {
       try {
-        const data = await getDashboard();
+        const [dashboardData, leaves] = await Promise.all([
+          getDashboard(),
+          getAllLeaves({ status: 'Pending' })
+        ]);
         setStats({
-          totalEmployees: data.totalUsers || 0,
-          presentToday: data.presentToday || 0,
-          onLeave: data.leaveToday || 0,
-          pendingApprovals: 0,
+          totalEmployees: dashboardData.totalEmployees || 0,
+          presentToday: dashboardData.presentToday || 0,
+          onLeave: dashboardData.onLeave || 0,
+          pendingApprovals: leaves.length || 0,
         });
       } catch (err) {
         console.error('Failed to load dashboard', err);
@@ -120,7 +125,7 @@ const AdminDashboard = ({ user, onLogout }) => {
                   Manage Attendance
                 </Button>
                 <Button
-                  onClick={() => navigate('/leave')}
+                  onClick={() => setActiveTab('time-off')}
                   className="bg-purple-600 hover:bg-purple-700"
                 >
                   Review Leave Requests
@@ -141,10 +146,7 @@ const AdminDashboard = ({ user, onLogout }) => {
             </div>
           </>
         ) : (
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Time Off Management</h2>
-            <p className="text-gray-600">Time off management coming soon...</p>
-          </div>
+          <AdminTimeOff />
         )}
       </div>
     </div>

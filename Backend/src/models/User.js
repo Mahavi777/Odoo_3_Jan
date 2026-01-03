@@ -30,6 +30,12 @@ const userSchema = new Schema({
     unique: true,
     index: true,
   },
+  employeeId: {
+    type: String,
+    unique: true,
+    index: true,
+    sparse: true,
+  },
   password: {
     type: String,
     required: true,
@@ -61,6 +67,10 @@ const userSchema = new Schema({
     type: String,
     enum: ['ACTIVE', 'INACTIVE'],
     default: 'ACTIVE',
+  },
+  isEmailVerified: {
+    type: Boolean,
+    default: false,
   },
 }, {
   timestamps: true,

@@ -6,11 +6,13 @@ import { signup } from '../../api/auth.api';
 
 const SignUp = () => {
   const [formData, setFormData] = useState({
+    employeeId: '',
     firstName: '',
     lastName: '',
     email: '',
     password: '',
     confirmPassword: '',
+    role: 'EMPLOYEE',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -63,6 +65,16 @@ const SignUp = () => {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
+            label="Employee ID"
+            type="text"
+            name="employeeId"
+            value={formData.employeeId}
+            onChange={handleChange}
+            placeholder="Enter your employee ID"
+            required
+          />
+
+          <Input
             label="First Name"
             type="text"
             name="firstName"
@@ -111,6 +123,23 @@ const SignUp = () => {
             placeholder="Confirm your password"
             required
           />
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Role
+            </label>
+            <select
+              name="role"
+              value={formData.role}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              required
+            >
+              <option value="EMPLOYEE">Employee</option>
+              <option value="HR">HR Officer</option>
+            </select>
+            <p className="mt-1 text-xs text-gray-500">Select your role in the organization</p>
+          </div>
 
           <Button
             type="submit"

@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Input from '../../components/common/Input';
-import Button from '../../components/common/Button';
-import { getProfile, updateProfile } from '../../api/auth.api';
+import React from 'react';
+import EmployeeProfile from './EmployeeProfile';
+import AdminProfile from './AdminProfile';
 
+<<<<<<< HEAD
 
   const Profile = ({ user, onLogout }) => {
     const [profile, setProfile] = useState(null);
@@ -191,6 +190,33 @@ import { getProfile, updateProfile } from '../../api/auth.api';
                 onChange={handleChange}
                 placeholder="Enter first name"
               />
+=======
+const Profile = ({ user, onLogout }) => {
+  // Get user role from localStorage if not provided
+  const getUserRole = () => {
+    if (user?.role) return user.role;
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      try {
+        const parsedUser = JSON.parse(userData);
+        return parsedUser.role;
+      } catch (e) {
+        return 'EMPLOYEE';
+      }
+    }
+    return 'EMPLOYEE';
+  };
+
+  const userRole = getUserRole();
+
+  // Render appropriate profile based on role
+  if (userRole === 'ADMIN' || userRole === 'HR') {
+    return <AdminProfile user={user} onLogout={onLogout} />;
+  }
+
+  return <EmployeeProfile user={user} onLogout={onLogout} />;
+};
+>>>>>>> 671ca5dd7e29650f2df2e7d4b72449c8de40e9af
 
               <Input
                 label="Last Name"

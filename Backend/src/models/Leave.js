@@ -33,6 +33,9 @@ const leaveSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'User',
   },
+  comment: {
+    type: String,
+  },
 }, {
   timestamps: true,
 });

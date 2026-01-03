@@ -1,40 +1,46 @@
-import React, { useState } from 'react';
-import { Calendar, Upload, X, Plus, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Calendar, Upload, X, Plus, Clock, CheckCircle, XCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { getMyLeaves, applyForLeave, cancelLeave } from '../../api/leave.api';
+import { toast } from 'react-toastify';
 
 export default function EmployeeTimeOff() {
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
-  const [activeTab, setActiveTab] = useState('paid');
+  const [activeTab, setActiveTab] = useState('all');
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [userName, setUserName] = useState('');
   
   const [formData, setFormData] = useState({
-    employee: 'John Doe',
-    timeOffType: 'Paid time off',
+    leaveType: 'Paid',
     startDate: '',
     endDate: '',
-    allocation: '',
     reason: ''
   });
 
-  const [timeOffRequests, setTimeOffRequests] = useState([
-    {
-      id: 1,
-      name: 'John Doe',
-      startDate: '24/10/2025',
-      endDate: '26/10/2025',
-      type: 'Paid time Off',
-      status: 'Approved',
-      days: 3
-    },
-    {
-      id: 2,
-      name: 'John Doe',
-      startDate: '15/11/2025',
-      endDate: '18/11/2025',
-      type: 'Sick Leave',
-      status: 'Pending',
-      days: 4
+  const [timeOffRequests, setTimeOffRequests] = useState([]);
+
+  useEffect(() => {
+    loadLeaves();
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      const user = JSON.parse(userData);
+      setUserName(user.fullName || user.firstName + ' ' + user.lastName || 'Employee');
     }
-  ]);
+  }, []);
+
+  const loadLeaves = async () => {
+    try {
+      setLoading(true);
+      const leaves = await getMyLeaves();
+      setTimeOffRequests(leaves);
+    } catch (error) {
+      console.error('Error loading leaves:', error);
+      toast.error('Failed to load leave requests');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -47,20 +53,65 @@ export default function EmployeeTimeOff() {
     }
   };
 
-  const handleSubmit = () => {
-    // Add new request logic here
-    console.log('Submitting request:', formData);
-    setShowRequestModal(false);
-    // Reset form
-    setFormData({
-      employee: 'John Doe',
-      timeOffType: 'Paid time off',
-      startDate: '',
-      endDate: '',
-      allocation: '',
-      reason: ''
-    });
-    setSelectedFile(null);
+  const calculateDays = (startDate, endDate) => {
+    if (!startDate || !endDate) return 0;
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const diffTime = Math.abs(end - start);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+    return diffDays;
+  };
+
+  const handleSubmit = async () => {
+    if (!formData.startDate || !formData.endDate || !formData.reason) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    if (new Date(formData.startDate) > new Date(formData.endDate)) {
+      toast.error('Start date must be before end date');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      await applyForLeave({
+        leaveType: formData.leaveType,
+        startDate: formData.startDate,
+        endDate: formData.endDate,
+        reason: formData.reason,
+      });
+      toast.success('Leave request submitted successfully!');
+      setShowRequestModal(false);
+      setFormData({
+        leaveType: 'Paid',
+        startDate: '',
+        endDate: '',
+        reason: ''
+      });
+      setSelectedFile(null);
+      loadLeaves();
+    } catch (error) {
+      console.error('Error submitting leave:', error);
+      toast.error(error.response?.data?.message || 'Failed to submit leave request');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleCancel = async (leaveId) => {
+    if (!window.confirm('Are you sure you want to cancel this leave request?')) {
+      return;
+    }
+
+    try {
+      await cancelLeave(leaveId);
+      toast.success('Leave request cancelled successfully');
+      loadLeaves();
+    } catch (error) {
+      console.error('Error cancelling leave:', error);
+      toast.error(error.response?.data?.message || 'Failed to cancel leave request');
+    }
   };
 
   const getStatusIcon = (status) => {
@@ -138,6 +189,19 @@ export default function EmployeeTimeOff() {
           <div className="px-6 pt-4">
             <div className="flex gap-2 border-b border-gray-200">
               <button
+                onClick={() => setActiveTab('all')}
+                className={`px-6 py-3 font-medium transition-all border-b-2 ${
+                  activeTab === 'all'
+                    ? 'text-indigo-600 border-indigo-600 bg-indigo-50'
+                    : 'text-gray-500 border-transparent hover:text-gray-700'
+                }`}
+              >
+                <div className="text-center">
+                  <div className="text-lg font-bold">All Leaves</div>
+                  <div className="text-xs mt-1">{timeOffRequests.length} Total</div>
+                </div>
+              </button>
+              <button
                 onClick={() => setActiveTab('paid')}
                 className={`px-6 py-3 font-medium transition-all border-b-2 ${
                   activeTab === 'paid'
@@ -146,8 +210,8 @@ export default function EmployeeTimeOff() {
                 }`}
               >
                 <div className="text-center">
-                  <div className="text-lg font-bold">Paid time Off</div>
-                  <div className="text-xs mt-1">24 Days Available</div>
+                  <div className="text-lg font-bold">Paid</div>
+                  <div className="text-xs mt-1">{timeOffRequests.filter(l => l.leaveType === 'Paid').length} Requests</div>
                 </div>
               </button>
               <button
@@ -159,8 +223,21 @@ export default function EmployeeTimeOff() {
                 }`}
               >
                 <div className="text-center">
-                  <div className="text-lg font-bold">Sick time off</div>
-                  <div className="text-xs mt-1">07 Days Available</div>
+                  <div className="text-lg font-bold">Sick</div>
+                  <div className="text-xs mt-1">{timeOffRequests.filter(l => l.leaveType === 'Sick').length} Requests</div>
+                </div>
+              </button>
+              <button
+                onClick={() => setActiveTab('unpaid')}
+                className={`px-6 py-3 font-medium transition-all border-b-2 ${
+                  activeTab === 'unpaid'
+                    ? 'text-red-600 border-red-600 bg-red-50'
+                    : 'text-gray-500 border-transparent hover:text-gray-700'
+                }`}
+              >
+                <div className="text-center">
+                  <div className="text-lg font-bold">Unpaid</div>
+                  <div className="text-xs mt-1">{timeOffRequests.filter(l => l.leaveType === 'Unpaid').length} Requests</div>
                 </div>
               </button>
             </div>
@@ -168,47 +245,90 @@ export default function EmployeeTimeOff() {
 
           {/* Time Off Table */}
           <div className="p-6">
-            <div className="overflow-x-auto rounded-lg border border-gray-200">
-              <table className="w-full">
-                <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Name</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Start Date</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">End Date</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Time off Type</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {timeOffRequests
-                    .filter(req => 
-                      activeTab === 'paid' 
-                        ? req.type.includes('Paid') 
-                        : req.type.includes('Sick')
-                    )
-                    .map((request) => (
-                      <tr key={request.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-6 py-4 text-sm text-gray-900">{request.name}</td>
-                        <td className="px-6 py-4 text-sm text-gray-700">{request.startDate}</td>
-                        <td className="px-6 py-4 text-sm text-gray-700">{request.endDate}</td>
-                        <td className="px-6 py-4">
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            {request.type}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-2">
-                            {getStatusIcon(request.status)}
-                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(request.status)}`}>
-                              {request.status}
-                            </span>
-                          </div>
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="animate-spin text-indigo-600" size={32} />
+              </div>
+            ) : (
+              <div className="overflow-x-auto rounded-lg border border-gray-200">
+                <table className="w-full">
+                  <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
+                    <tr>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Start Date</th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">End Date</th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Days</th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Leave Type</th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Reason</th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Status</th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {timeOffRequests
+                      .filter(req => {
+                        if (activeTab === 'all') return true;
+                        if (activeTab === 'paid') return req.leaveType === 'Paid';
+                        if (activeTab === 'sick') return req.leaveType === 'Sick';
+                        if (activeTab === 'unpaid') return req.leaveType === 'Unpaid';
+                        return true;
+                      })
+                      .map((request) => {
+                        const days = calculateDays(request.startDate, request.endDate);
+                        return (
+                          <tr key={request._id} className="hover:bg-gray-50 transition-colors">
+                            <td className="px-6 py-4 text-sm text-gray-900">
+                              {new Date(request.startDate).toLocaleDateString()}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-700">
+                              {new Date(request.endDate).toLocaleDateString()}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-700">{days}</td>
+                            <td className="px-6 py-4">
+                              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                {request.leaveType}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-700 max-w-xs truncate" title={request.reason}>
+                              {request.reason}
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-2">
+                                {getStatusIcon(request.status)}
+                                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(request.status)}`}>
+                                  {request.status}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4">
+                              {request.status === 'Pending' && (
+                                <button
+                                  onClick={() => handleCancel(request._id)}
+                                  className="text-red-600 hover:text-red-800 text-sm font-medium"
+                                >
+                                  Cancel
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    {timeOffRequests.filter(req => {
+                      if (activeTab === 'all') return true;
+                      if (activeTab === 'paid') return req.leaveType === 'Paid';
+                      if (activeTab === 'sick') return req.leaveType === 'Sick';
+                      if (activeTab === 'unpaid') return req.leaveType === 'Unpaid';
+                      return true;
+                    }).length === 0 && (
+                      <tr>
+                        <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
+                          No leave requests found
                         </td>
                       </tr>
-                    ))}
-                </tbody>
-              </table>
-            </div>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
 
           {/* Time Off Types Info */}
@@ -256,7 +376,7 @@ export default function EmployeeTimeOff() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Employee</label>
                 <input
                   type="text"
-                  value={formData.employee}
+                  value={userName}
                   disabled
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-blue-600 font-medium"
                 />
@@ -264,53 +384,59 @@ export default function EmployeeTimeOff() {
 
               {/* Time off Type */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Time off Type</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Leave Type <span className="text-red-500">*</span></label>
                 <select
-                  value={formData.timeOffType}
-                  onChange={(e) => handleInputChange('timeOffType', e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-blue-600"
+                  value={formData.leaveType}
+                  onChange={(e) => handleInputChange('leaveType', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
                 >
-                  <option>Paid time off</option>
-                  <option>Sick Leave</option>
-                  <option>Unpaid Leave</option>
+                  <option value="Paid">Paid Leave</option>
+                  <option value="Sick">Sick Leave</option>
+                  <option value="Unpaid">Unpaid Leave</option>
                 </select>
               </div>
 
               {/* Validity Period */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Validity Period</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Validity Period <span className="text-red-500">*</span></label>
                 <div className="flex items-center gap-3">
                   <input
                     type="date"
                     value={formData.startDate}
                     onChange={(e) => handleInputChange('startDate', e.target.value)}
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-blue-600"
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                    min={new Date().toISOString().split('T')[0]}
                   />
                   <span className="text-gray-500 font-medium">To</span>
                   <input
                     type="date"
                     value={formData.endDate}
                     onChange={(e) => handleInputChange('endDate', e.target.value)}
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-blue-600"
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                    min={formData.startDate || new Date().toISOString().split('T')[0]}
                   />
                 </div>
+                {formData.startDate && formData.endDate && (
+                  <p className="mt-2 text-sm text-gray-600">
+                    Total Days: {calculateDays(formData.startDate, formData.endDate)}
+                  </p>
+                )}
               </div>
 
-              {/* Allocation */}
+              {/* Reason */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Allocation</label>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="number"
-                    value={formData.allocation}
-                    onChange={(e) => handleInputChange('allocation', e.target.value)}
-                    placeholder="01:00"
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-blue-600"
-                  />
-                  <span className="px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-700 font-medium">
-                    Days
-                  </span>
-                </div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Reason <span className="text-red-500">*</span></label>
+                <textarea
+                  value={formData.reason}
+                  onChange={(e) => handleInputChange('reason', e.target.value)}
+                  placeholder="Enter reason for leave..."
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  rows="3"
+                  required
+                />
               </div>
 
               {/* Attachment */}
@@ -347,9 +473,17 @@ export default function EmployeeTimeOff() {
               </button>
               <button
                 onClick={handleSubmit}
-                className="px-6 py-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-medium rounded-lg transition-all shadow-md"
+                disabled={submitting}
+                className="px-6 py-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-medium rounded-lg transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
-                Submit
+                {submitting ? (
+                  <>
+                    <Loader2 className="animate-spin" size={16} />
+                    Submitting...
+                  </>
+                ) : (
+                  'Submit'
+                )}
               </button>
             </div>
           </div>

@@ -5,6 +5,8 @@ import * as dashboardController from '../controllers/dashboard.controller.js';
 
 // GET /api/dashboard
 router.get('/', protect, dashboardController.getDashboard);
+router.get('/attendance-report', protect, dashboardController.getAttendanceReport);
+router.get('/salary-slip', protect, dashboardController.getSalarySlip);
 
 export default router;
 
