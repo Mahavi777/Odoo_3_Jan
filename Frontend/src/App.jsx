@@ -15,6 +15,7 @@ import ActivityPage from './pages/Activity';
 import AttendancePage from './pages/AttendancePage';
 import Payroll from './pages/payroll/Payroll';
 import Analytics from './pages/analytics/Analytics';
+import Salary from './pages/salary/Salary';
 import ViewEmployeeInfo from './pages/employee/ViewEmployeeInfo';
 import useAuth from './hooks/useAuth';
 
@@ -80,6 +81,8 @@ function App() {
           element={<PrivateRoute><Analytics user={user} onLogout={handleLogout} /></PrivateRoute>}
         />
         <Route
+          path="/salary"
+          element={<PrivateRoute><Salary user={user} onLogout={handleLogout} /></PrivateRoute>}
           path="/employee/:employeeId"
           element={<PrivateRoute><ViewEmployeeInfo user={user} onLogout={handleLogout} /></PrivateRoute>}
         />

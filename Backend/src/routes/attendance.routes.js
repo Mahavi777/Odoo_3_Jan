@@ -12,4 +12,6 @@ router.get('/user/:id', protect, attendanceController.getAttendanceForUser);
 // Admin/HR: list all attendance (optional filters)
 router.get('/all', protect, requireRole(['ADMIN', 'HR']), attendanceController.getAllAttendance);
 
+router.post('/generate-daily', protect, requireRole(['ADMIN', 'HR']), attendanceController.generateDailyAttendanceRecords);
+
 export default router;

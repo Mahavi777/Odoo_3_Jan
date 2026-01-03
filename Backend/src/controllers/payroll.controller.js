@@ -2,6 +2,8 @@ import Payroll from '../models/Payroll.js';
 import User from '../models/User.js';
 import Activity from '../models/Activity.js';
 import SalaryAndBankInfo from '../models/SalaryAndBankInfo.js';
+import Attendance from '../models/Attendance.js';
+import Leave from '../models/Leave.js';
 
 // @route   GET /api/payroll/me
 // @desc    Get current user's payroll (read-only for employees)
@@ -239,3 +241,60 @@ export const updatePayrollByUserId = async (req, res) => {
   }
 };
 
+// @route   GET /api/payroll/payable-days/:userId?month=MM&year=YYYY
+// @desc    Get payable days for a user for a given month
+// @access  Private (Admin/HR)
+export const getPayableDays = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { month, year } = req.query;
+
+        if (!month || !year) {
+            return res.status(400).json({ message: 'Month and year are required' });
+        }
+
+        const m = parseInt(month, 10) - 1;
+        const y = parseInt(year, 10);
+        const from = new Date(y, m, 1);
+        const to = new Date(y, m + 1, 0); // Last day of the month
+
+        const totalDaysInMonth = to.getDate();
+
+        const attendanceFilter = {
+            user: userId,
+            date: { $gte: from, $lte: to },
+            status: 'Absent'
+        };
+        const absentDays = await Attendance.countDocuments(attendanceFilter);
+
+        const leaveFilter = {
+            user: userId,
+            status: 'Approved',
+            leaveType: 'Unpaid',
+            startDate: { $lte: to },
+            endDate: { $gte: from }
+        };
+        const unpaidLeaveRecords = await Leave.find(leaveFilter);
+
+        let unpaidLeaveDays = 0;
+        unpaidLeaveRecords.forEach(leave => {
+            const leaveStart = leave.startDate > from ? leave.startDate : from;
+            const leaveEnd = leave.endDate < to ? leave.endDate : to;
+            const diffTime = Math.abs(leaveEnd - leaveStart);
+            unpaidLeaveDays += Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 to include start date
+        });
+
+        const payableDays = totalDaysInMonth - absentDays - unpaidLeaveDays;
+
+        res.json({
+            totalDaysInMonth,
+            absentDays,
+            unpaidLeaveDays,
+            payableDays
+        });
+
+    } catch (err) {
+        console.error('Get payable days error:', err);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
