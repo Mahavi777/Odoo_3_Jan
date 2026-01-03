@@ -1,7 +1,7 @@
 // 1. Load environment variables at the very top. This is crucial.
 const dotenvResult = require('dotenv').config();
 
-const aiRoutes = require('../routes/ai.routes.js');
+const aiRoutes = require('./src/routes/ai.routes.js');
 const mongoose = require('mongoose');
 
 if (dotenvResult.error) {
@@ -36,11 +36,11 @@ app.use("/api/ai", aiRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // this line to enable your OTP routes
-app.use('/api/otp', require('../routes/otp.routes.js'));
-app.use('/api/password-reset', require('../routes/passwordReset.routes.js'));
+app.use('/api/otp', require('./src/routes/otp.routes.js'));
+app.use('/api/password-reset', require('./src/routes/passwordReset.routes.js'));
 
 
-const connectDB = require('./config/db.js');
+const connectDB = require('./src/config/db.js');
 connectDB();
 
 // Handle other connection events
@@ -53,9 +53,9 @@ mongoose.connection.on('disconnected', () => {
 });
 
 // Mount the auth routes
-app.use('/api/auth', require('../routes/auth.routes.js'));
-app.use('/api/profile', require('../routes/profile.routes.js'));
-app.use('/api/users', require('../routes/user.routes.js'));
+app.use('/api/auth', require('./src/routes/auth.routes.js'));
+app.use('/api/profile', require('./src/routes/profile.routes.js'));
+app.use('/api/users', require('./src/routes/user.routes.js'));
 
 
 const PORT = process.env.PORT || 5000;
