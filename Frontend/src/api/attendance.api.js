@@ -5,8 +5,8 @@ export const checkIn = async () => {
 	return res.data;
 };
 
-export const checkOut = async () => {
-	const res = await api.post('/attendance/checkout');
+export const checkOut = async (breakTime = 0) => {
+	const res = await api.post('/attendance/checkout', { breakTime });
 	return res.data;
 };
 

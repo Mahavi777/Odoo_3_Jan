@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, User, Mail, Phone, Building2, MapPin, Calendar, CheckCircle, Plane, AlertCircle, Loader2 } from 'lucide-react';
+import { ArrowLeft, User, Mail, Phone, Building2, MapPin, Calendar, CheckCircle, Plane, AlertCircle, Loader2, Edit } from 'lucide-react';
 import { getUserProfile } from '../../api/user.api';
 import { getUserAttendance } from '../../api/attendance.api';
 import { getAllLeaves } from '../../api/leave.api';
@@ -172,6 +172,17 @@ const ViewEmployeeInfo = ({ user: currentUser }) => {
                       </span>
                     )}
                   </div>
+                </div>
+                <div>
+                  {currentUser?.role === 'admin' && (
+                    <button
+                      onClick={() => navigate(`/employee/${employeeId}/edit`)}
+                      className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors"
+                    >
+                      <Edit size={16} />
+                      Edit Profile
+                    </button>
+                  )}
                 </div>
               </div>
 

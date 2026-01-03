@@ -7,7 +7,6 @@ export default function EmployeeAttendance() {
   const [attendanceRecords, setAttendanceRecords] = useState([]);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [breakTime, setBreakTime] = useState(0);
 
   useEffect(() => {
     loadAttendance();
@@ -22,23 +21,9 @@ export default function EmployeeAttendance() {
     }
   };
 
+  const handleStatusChange = () => {
     // Reload attendance records when status changes
     loadAttendance();
-  const handleCheckOut = async () => {
-    try {
-      const res = await apiCheckOut({ breakTime });
-      setTodayAttendance(res.attendance || res);
-      toast.success('Checked out successfully!');
-      // Reload attendance data
-      const records = await getMyAttendance(selectedMonth, selectedYear);
-      setAttendanceRecords(records || []);
-      const todayStr = new Date().toDateString();
-      const todayRec = records?.find(r => new Date(r.date).toDateString() === todayStr) || null;
-      setTodayAttendance(todayRec);
-    } catch (err) {
-      console.error('Check-out failed', err);
-      toast.error(err?.response?.data?.message || 'Check-out failed');
-    }
   };
 
   // Calculate statistics
@@ -56,29 +41,6 @@ export default function EmployeeAttendance() {
           <p className="text-gray-600 mt-1">View your daily attendance records and work hours</p>
         </div>
 
-        {/* Check In/Out Buttons */}
-        <div className="mb-6 flex gap-4 items-center">
-          <button
-            onClick={handleCheckIn}
-            disabled={todayAttendance?.checkIn}
-            className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium transition-all shadow-md"
-          >
-            Check In
-          </button>
-          <input
-            type="number"
-            value={breakTime}
-            onChange={(e) => setBreakTime(e.target.value)}
-            placeholder="Break (mins)"
-            className="px-4 py-2 border rounded-lg w-32"
-          />
-          <button
-            onClick={handleCheckOut}
-            disabled={!todayAttendance?.checkIn || todayAttendance?.checkOut}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium transition-all shadow-md"
-          >
-            Check Out
-          </button>
         {/* Check In/Out Component */}
         <div className="mb-6">
           <CheckInOut onStatusChange={handleStatusChange} />
@@ -293,7 +255,6 @@ export default function EmployeeAttendance() {
               </div>
             </div>
           </div>
-        </div>
         </div>
 
       </main>

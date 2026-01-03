@@ -1,77 +1,121 @@
-import asyncHandler from 'express-async-handler';
-import SalaryStructure from '../models/SalaryStructure.js';
+import Salary from '../models/Salary.js';
 import User from '../models/User.js';
+import SalaryStructure from '../models/SalaryStructure.js';
+import { calculateSalaryComponents } from '../services/salary.service.js';
 
-// @desc    Create a salary structure
-// @route   POST /api/salary
-// @access  Admin/HR
-const createSalaryStructure = asyncHandler(async (req, res) => {
-    const { userId, wage, components, pfConfiguration, deductions } = req.body;
+export const setOrUpdateSalary = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { wage } = req.body;
 
-    const user = await User.findById(userId);
-    if (!user) {
-        res.status(404);
-        throw new Error('User not found');
+        if (!wage || isNaN(wage) || wage < 0) {
+            return res.status(400).json({ message: 'Invalid wage amount' });
+        }
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        const salaryComponents = calculateSalaryComponents(wage);
+
+        let salary = await Salary.findOne({ user: userId });
+
+        if (salary) {
+            // Update existing salary
+            salary.wage = wage;
+            salary.basic = salaryComponents.basic;
+            salary.hra = salaryComponents.hra;
+            salary.allowances = salaryComponents.allowances;
+            salary.pf = salaryComponents.pf;
+            salary.tax = salaryComponents.tax;
+            salary.netSalary = salaryComponents.netSalary;
+            salary.ctc = salaryComponents.ctc;
+        } else {
+            // Create new salary
+            salary = new Salary({
+                user: userId,
+                wage,
+                ...salaryComponents,
+            });
+        }
+
+        await salary.save();
+
+        return res.status(200).json({ message: 'Salary updated successfully', data: salary });
+
+    } catch (error) {
+        console.error('Error in setOrUpdateSalary:', error);
+        return res.status(500).json({ message: 'Server Error' });
     }
+};
 
-    const salaryStructureExists = await SalaryStructure.findOne({ user: userId });
-    if (salaryStructureExists) {
-        res.status(400);
-        throw new Error('Salary structure already exists for this user');
+export const getSalary = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const salary = await Salary.findOne({ user: userId }).populate('user', 'fullName email');
+
+        if (!salary) {
+            return res.status(404).json({ message: 'Salary information not found for this user' });
+        }
+
+        return res.status(200).json({ message: 'Salary details fetched', data: salary });
+    } catch (error) {
+        console.error('Error in getSalary:', error);
+        return res.status(500).json({ message: 'Server Error' });
     }
+};
 
-    const salaryStructure = new SalaryStructure({
-        user: userId,
-        wage,
-        components,
-        pfConfiguration,
-        deductions,
-    });
-
-    const createdSalaryStructure = await salaryStructure.save();
-    res.status(201).json(createdSalaryStructure);
-});
-
-// @desc    Update a salary structure
-// @route   PUT /api/salary/:userId
-// @access  Admin/HR
-const updateSalaryStructure = asyncHandler(async (req, res) => {
-    const { userId } = req.params;
-    const { wage, components, pfConfiguration, deductions } = req.body;
-
-    const salaryStructure = await SalaryStructure.findOne({ user: userId });
-
-    if (salaryStructure) {
-        salaryStructure.wage = wage || salaryStructure.wage;
-        salaryStructure.components = components || salaryStructure.components;
-        salaryStructure.pfConfiguration = pfConfiguration || salaryStructure.pfConfiguration;
-        salaryStructure.deductions = deductions || salaryStructure.deductions;
-
-        const updatedSalaryStructure = await salaryStructure.save();
-        res.json(updatedSalaryStructure);
-    } else {
-        res.status(404);
-        throw new Error('Salary structure not found');
+export const getAllSalaries = async (req, res) => {
+    try {
+        const salaries = await Salary.find().populate('user', 'fullName email employeeId');
+        return res.status(200).json({ message: 'All salaries fetched', data: salaries });
+    } catch (error) {
+        console.error('Error in getAllSalaries:', error);
+        return res.status(500).json({ message: 'Server Error' });
     }
-});
+};
 
-// @desc    Get a salary structure
-// @route   GET /api/salary/:userId
-// @access  Admin/HR
-const getSalaryStructure = asyncHandler(async (req, res) => {
-    const { userId } = req.params;
-    const salaryStructure = await SalaryStructure.findOne({ user: userId }).populate('user', 'fullName email');
-
-    if (salaryStructure) {
-        res.json(salaryStructure);
-    } else {
-        res.status(404);
-        throw new Error('Salary structure not found');
+export const getSalaryStructure = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const structure = await SalaryStructure.findOne({ user: userId });
+        if (!structure) {
+            return res.status(404).json({ message: 'Salary structure not found' });
+        }
+        res.json(structure);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
-});
+};
 
-export {
-    createSalaryStructure,
-    updateSalaryStructure,
-    getSalaryStructure,
+export const createSalaryStructure = async (req, res) => {
+    try {
+        const { userId, ...structureData } = req.body;
+        const user = await User.findById(userId);
+        if(!user) return res.status(404).json({message: 'User not found'});
+
+        const newStructure = new SalaryStructure({
+            user: userId,
+            ...structureData
+        });
+
+        await newStructure.save();
+        res.status(201).json(newStructure);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+export const updateSalaryStructure = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const structure = await SalaryStructure.findOneAndUpdate({ user: userId }, req.body, { new: true });
+        if (!structure) {
+            return res.status(404).json({ message: 'Salary structure not found' });
+        }
+        res.json(structure);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
 };

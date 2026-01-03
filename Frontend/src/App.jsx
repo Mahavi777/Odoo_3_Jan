@@ -16,7 +16,9 @@ import AttendancePage from './pages/AttendancePage';
 import Payroll from './pages/payroll/Payroll';
 import Analytics from './pages/analytics/Analytics';
 import Salary from './pages/salary/Salary';
+import ManageSalary from './pages/salary/ManageSalary';
 import ViewEmployeeInfo from './pages/employee/ViewEmployeeInfo';
+import EditEmployeeInfo from './pages/employee/EditEmployeeInfo'; // Import EditEmployeeInfo
 import useAuth from './hooks/useAuth';
 
 const PrivateRoute = ({ children }) => {
@@ -83,8 +85,18 @@ function App() {
         <Route
           path="/salary"
           element={<PrivateRoute><Salary user={user} onLogout={handleLogout} /></PrivateRoute>}
+        />
+        <Route
+          path="/manage-salary"
+          element={<PrivateRoute><ManageSalary user={user} onLogout={handleLogout} /></PrivateRoute>}
+        />
+        <Route
           path="/employee/:employeeId"
           element={<PrivateRoute><ViewEmployeeInfo user={user} onLogout={handleLogout} /></PrivateRoute>}
+        />
+        <Route
+          path="/employee/:employeeId/edit"
+          element={<PrivateRoute><EditEmployeeInfo user={user} onLogout={handleLogout} /></PrivateRoute>}
         />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>

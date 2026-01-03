@@ -14,3 +14,8 @@ export const updateUserProfile = async (userId, data) => {
   const response = await api.put(`/profile/user/${userId}`, data);
   return response.data;
 };
+
+export const updateUserProfileByAdmin = async (userId, data) => {
+    const response = await api.put(`/users/${userId}`, data);
+    return response.data;
+};

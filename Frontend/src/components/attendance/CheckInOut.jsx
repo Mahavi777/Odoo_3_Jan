@@ -8,6 +8,8 @@ const CheckInOut = ({ onStatusChange }) => {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [status, setStatus] = useState('not_checked_in'); // 'not_checked_in', 'checked_in', 'checked_out'
+  const [breakTime, setBreakTime] = useState(0);
+  const [showBreakInput, setShowBreakInput] = useState(false);
 
   useEffect(() => {
     loadTodayAttendance();
@@ -54,10 +56,13 @@ const CheckInOut = ({ onStatusChange }) => {
   const handleCheckOut = async () => {
     try {
       setActionLoading(true);
-      const res = await checkOut();
+      const breakTimeMinutes = parseInt(breakTime) || 0;
+      const res = await checkOut(breakTimeMinutes);
       setAttendance(res.attendance);
       setStatus('checked_out');
       toast.success('✅ Checked out successfully!');
+      setShowBreakInput(false);
+      setBreakTime(0);
       if (onStatusChange) {
         onStatusChange('checked_out', res.attendance);
       }
@@ -172,7 +177,7 @@ const CheckInOut = ({ onStatusChange }) => {
         </div>
 
         {/* Action Buttons Section */}
-        <div className="flex gap-4">
+        <div className="flex flex-col gap-4">
           {/* Check In Button */}
           <button
             onClick={handleCheckIn}
@@ -195,6 +200,21 @@ const CheckInOut = ({ onStatusChange }) => {
               </div>
             )}
           </button>
+
+          {/* Break Time Input (shown when checked in) */}
+          {status === 'checked_in' && (
+            <div className="flex gap-2 items-center">
+              <input
+                type="number"
+                value={breakTime}
+                onChange={(e) => setBreakTime(e.target.value)}
+                placeholder="Break time (minutes)"
+                min="0"
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent w-40"
+              />
+              <span className="text-sm text-gray-600">mins</span>
+            </div>
+          )}
 
           {/* Check Out Button */}
           <button

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, LogOut, User, Loader2, Users } from 'lucide-react';
+import { Search, LogOut, User, Loader2, Users, DollarSign } from 'lucide-react';
 import EmployeeCard from '../../components/employee/EmployeeCard';
 import { getAllUsers } from '../../api/user.api';
 import { getAllAttendance } from '../../api/attendance.api';
@@ -167,6 +167,18 @@ const EmployeeDashboard = ({ user, onLogout }) => {
                     <User className="w-4 h-4" />
                     <span>My Profile</span>
                   </button>
+                  {user?.role === 'ADMIN' && (
+                    <button
+                        onClick={() => {
+                            navigate('/manage-salary');
+                            setShowProfileMenu(false);
+                        }}
+                        className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 flex items-center space-x-2 transition-colors"
+                    >
+                        <DollarSign className="w-4 h-4" />
+                        <span>Manage Salaries</span>
+                    </button>
+                  )}
                   <div className="my-1 border-t border-gray-200"></div>
                   <button
                     onClick={() => {

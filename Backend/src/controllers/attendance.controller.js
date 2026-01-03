@@ -1,21 +1,17 @@
 import Attendance from '../models/Attendance.js';
 import Activity from '../models/Activity.js';
 import User from '../models/User.js';
-<<<<<<< HEAD
+import { generateDailyAttendance } from '../services/attendance.service.js';
 
 function startOfDay(date) {
   const d = new Date(date);
   d.setHours(0, 0, 0, 0);
   return d;
 }
-=======
-import { startOfDay } from '../utils/date.util.js';
-import { generateDailyAttendance } from '../services/attendance.service.js';
->>>>>>> dc5923f658d811feb9a2eb14cb10ec493e6b2d2d
 
 // POST /api/attendance/checkin
 export const checkIn = async (req, res) => {
-  try {
+  try { 
     const userId = req.user.id;
     const today = startOfDay(new Date());
     const checkInTime = new Date();
@@ -70,31 +66,20 @@ export const checkOut = async (req, res) => {
       return res.status(400).json({ message: 'Already checked out for today' });
     }
 
-<<<<<<< HEAD
     attendance.checkOut = checkOutTime;
     attendance.checkOutTime = checkOutTime;
+    attendance.breakTime = breakTime || 0;
     attendance.status = 'Present';
     
-    // Calculate total working hours
-    if (attendance.checkIn && attendance.checkOut) {
-      const diffMs = attendance.checkOut - attendance.checkIn;
-      attendance.totalWorkingHours = parseFloat((diffMs / (1000 * 60 * 60)).toFixed(2));
-    }
-=======
-    attendance.checkOut = new Date();
-    attendance.breakTime = breakTime || 0;
-
+    // Calculate total working hours (subtract break time)
     if (attendance.checkIn) {
-      const checkInTime = attendance.checkIn.getTime();
-      const checkOutTime = attendance.checkOut.getTime();
-      const totalDuration = (checkOutTime - checkInTime) / (1000 * 60 * 60); // in hours
-      const totalWork = totalDuration - (attendance.breakTime / 60);
-      attendance.totalWorkingHours = totalWork > 0 ? totalWork : 0;
+      const checkInTime = new Date(attendance.checkIn).getTime();
+      const checkOutTimeMs = checkOutTime.getTime();
+      const totalDuration = (checkOutTimeMs - checkInTime) / (1000 * 60 * 60); // in hours
+      const breakTimeHours = (attendance.breakTime || 0) / 60; // convert minutes to hours
+      const totalWork = totalDuration - breakTimeHours;
+      attendance.totalWorkingHours = totalWork > 0 ? parseFloat(totalWork.toFixed(2)) : 0;
     }
-    
-    // if checkIn exists ensure status is Present
-    attendance.status = attendance.status || 'Present';
->>>>>>> dc5923f658d811feb9a2eb14cb10ec493e6b2d2d
 
     await attendance.save();
 

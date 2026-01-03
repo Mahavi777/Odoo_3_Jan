@@ -6,5 +6,6 @@ import { checkRole } from '../middleware/role.middleware.js';
 
 router.get('/', protect, userController.getAllUsers);
 router.get('/all', protect, checkRole(['ADMIN', 'HR']), userController.getAllUsers);
+router.put('/:userId', protect, checkRole(['ADMIN', 'HR']), userController.updateUser);
 
 export default router;

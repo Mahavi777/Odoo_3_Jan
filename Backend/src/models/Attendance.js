@@ -17,37 +17,35 @@ const attendanceSchema = new Schema({
   checkOut: {
     type: Date,
   },
-<<<<<<< HEAD
   checkInTime: {
     type: Date,
   },
   checkOutTime: {
     type: Date,
-=======
-  breakTime: {
-    type: Number, // in minutes
-    default: 0,
->>>>>>> dc5923f658d811feb9a2eb14cb10ec493e6b2d2d
   },
-  totalWorkingHours: {
-    type: Number,
-    default: 0,
-  },
-  status: {
-    type: String,
-    enum: ['Present', 'Absent', 'Half-Day', 'Leave', 'ON_LEAVE'],
-    default: 'Absent',
-  },
-}, {
+    breakTime: {
+      type: Number, // in minutes
+      default: 0,
+    },
+    totalWorkingHours: {
+      type: Number,
+      default: 0,
+    },
+    status: {
+      type: String,
+      enum: ['Present', 'Absent', 'Half-Day', 'Leave', 'ON_LEAVE'],
+      default: 'Absent',
+    },
+  }, {
   timestamps: true,
 });
 
 // Calculate total working hours before saving
-attendanceSchema.pre('save', function(next) {
+attendanceSchema.pre('save', function (next) {
   // Use checkInTime/checkOutTime if available, otherwise fall back to checkIn/checkOut
   const checkInTime = this.checkInTime || this.checkIn;
   const checkOutTime = this.checkOutTime || this.checkOut;
-  
+
   if (checkInTime && checkOutTime) {
     const diffMs = new Date(checkOutTime) - new Date(checkInTime);
     this.totalWorkingHours = parseFloat((diffMs / (1000 * 60 * 60)).toFixed(2)); // Convert to hours
