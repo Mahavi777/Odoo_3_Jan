@@ -2,7 +2,7 @@ import api from '../services/api';
 
 // Authentication endpoints
 export const login = async (credentials) => {
-  const res = await api.post('/auth/login', credentials);
+  const res = await api.post('/auth/signin', credentials);
   return res;
 };
 
