@@ -1,7 +1,7 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const { protect } = require('../middleware/auth.middleware');
-const profileController = require('../controllers/profile.controller');
+import { protect } from '../middleware/auth.middleware.js';
+import * as profileController from '../controllers/profile.controller.js';
 
 router.put('/avatar', protect, profileController.updateAvatar);
 router.get('/me', protect, profileController.getProfile);
@@ -9,4 +9,4 @@ router.put('/me', protect, profileController.updateProfile);
 router.get('/activity', protect, profileController.getActivity);
 router.get('/usernames', protect, profileController.getAllUsernames);
 
-module.exports = router;
+export default router;

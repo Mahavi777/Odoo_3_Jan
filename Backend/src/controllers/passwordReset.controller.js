@@ -1,6 +1,6 @@
-const User = require('../models/User');
-const nodemailer = require('nodemailer');
-require('dotenv').config();
+import User from '../models/User.js';
+import nodemailer from 'nodemailer';
+import 'dotenv/config';
 
 // Nodemailer transporter setup
 if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
@@ -15,7 +15,7 @@ const transporter = nodemailer.createTransport({
     },
 });
 
-const forgotPassword = async (req, res) => {
+export const forgotPassword = async (req, res) => {
     try {
         const { email } = req.body;
         const user = await User.findOne({ email });
@@ -55,7 +55,7 @@ const forgotPassword = async (req, res) => {
     }
 };
 
-const verifyCode = async (req, res) => {
+export const verifyCode = async (req, res) => {
     try {
         const { email, code } = req.body;
         const user = await User.findOne({
@@ -76,7 +76,7 @@ const verifyCode = async (req, res) => {
     }
 };
 
-const resetPassword = async (req, res) => {
+export const resetPassword = async (req, res) => {
     try {
         const { email, code, password } = req.body;
         const user = await User.findOne({
@@ -101,10 +101,4 @@ const resetPassword = async (req, res) => {
         console.error('Reset Password Error:', error);
         res.status(500).send('Server error');
     }
-};
-
-module.exports = {
-    forgotPassword,
-    verifyCode,
-    resetPassword,
 };

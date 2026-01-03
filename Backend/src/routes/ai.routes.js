@@ -1,7 +1,7 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const aiController = require('../controllers/ai.controller');
+import * as aiController from '../controllers/ai.controller.js';
 
 router.post('/chat', aiController.chat);
 
-module.exports = router;
+export default router;

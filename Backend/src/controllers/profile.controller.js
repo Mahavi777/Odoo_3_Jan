@@ -1,8 +1,8 @@
-const multer = require('multer');
-const path = require('path');
-const { protect } = require('../middleware/auth.middleware');
-const User = require('../models/User');
-const Activity = require('../models/Activity');
+import multer from 'multer';
+import path from 'path';
+import { protect } from '../middleware/auth.middleware.js';
+import User from '../models/User.js';
+import Activity from '../models/Activity.js';
 
 // Multer configuration for file uploads
 const storage = multer.diskStorage({
@@ -54,12 +54,13 @@ const updateAvatar = (req, res) => {
 
       // The path should be accessible from the frontend
       const avatarPath = `/uploads/${req.file.filename}`;
-      user.avatar = avatarPath;
+      // store in `profileImage` field (matches User model)
+      user.profileImage = avatarPath;
       await user.save();
 
       res.json({
         message: 'Avatar updated successfully',
-        avatar: avatarPath,
+        profileImage: avatarPath,
       });
     } catch (error) {
       console.error(error);
@@ -78,7 +79,22 @@ const getProfile = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    res.json(user);
+
+    // Derive firstName/lastName from fullName for frontend compatibility
+    const userObj = user.toObject();
+    if (userObj.fullName) {
+      const parts = userObj.fullName.split(' ');
+      userObj.firstName = parts.shift();
+      userObj.lastName = parts.join(' ');
+    } else {
+      userObj.firstName = userObj.firstName || '';
+      userObj.lastName = userObj.lastName || '';
+    }
+
+    // Normalize profile image property
+    userObj.profileImage = userObj.profileImage || '';
+
+    res.json(userObj);
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');
@@ -89,8 +105,6 @@ const getProfile = async (req, res) => {
 // @desc    Update user profile
 // @access  Private
 const updateProfile = async (req, res) => {
-    const { firstName, lastName, email, phoneNumber, gender, location, occupation, bio } = req.body;
-
     try {
         const user = await User.findById(req.user.id);
 
@@ -98,63 +112,25 @@ const updateProfile = async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        const changes = [];
-        if (firstName && user.firstName !== firstName) {
-            changes.push(`updated first name`);
-        }
-        if (lastName && user.lastName !== lastName) {
-            changes.push(`updated last name`);
-        }
-        if (email && user.email !== email) {
-            changes.push(`updated email`);
-        }
-        if (phoneNumber && user.phoneNumber !== phoneNumber) {
-            changes.push(`updated phone number`);
-        }
-        if (gender && user.gender !== gender) {
-            changes.push(`updated gender`);
-        }
-        if (location && user.location !== location) {
-            changes.push(`updated location`);
-        }
-        if (occupation && user.occupation !== occupation) {
-            changes.push(`updated occupation`);
-        }
-        if (bio && user.bio !== bio) {
-            changes.push(`updated bio`);
-        }
-
-        if (changes.length > 0) {
-            const description = `User ${changes.join(', ')}.`;
-            const updateActivity = new Activity({
-                user: user._id,
-                activityType: 'profile_update',
-                description: description,
-            });
-            await updateActivity.save();
-        }
-
-        // Build profile object for update
-        const profileFields = {
-            firstName: firstName || user.firstName,
-            lastName: lastName || user.lastName,
+        const { fullName, email, phone, jobPosition, department, manager, location, dateOfJoining, status } = req.body;
+        
+        const updatedFields = {
+            fullName: fullName || user.fullName,
             email: email || user.email,
-            phoneNumber: phoneNumber || user.phoneNumber,
-            gender: gender || user.gender,
-            location: location !== undefined ? location : user.location,
-            occupation: occupation !== undefined ? occupation : user.occupation,
-            bio: bio !== undefined ? bio : user.bio,
+            phone: phone || user.phone,
+            jobPosition: jobPosition || user.jobPosition,
+            department: department || user.department,
+            manager: manager || user.manager,
+            location: location || user.location,
+            dateOfJoining: dateOfJoining || user.dateOfJoining,
+            status: status || user.status,
         };
 
-        // Update user
-        const updatedUser = await User.findByIdAndUpdate(
-            req.user.id,
-            { $set: profileFields },
-            { new: true }
-        ).select('-password');
-
-        return res.json(updatedUser);
-
+        const updatedUser = await User.findByIdAndUpdate(req.user.id, { $set: updatedFields }, { new: true }).select('-password');
+        
+        await Activity.create({ user: user._id, action: 'profile_update', description: 'User updated their profile.' });
+        
+        res.json(updatedUser);
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server Error');
@@ -193,4 +169,4 @@ const getAllUsernames = async (req, res) => {
   }
 };
 
-module.exports = { updateAvatar, getProfile, updateProfile, getActivity, getAllUsernames };
+export { updateAvatar, getProfile, updateProfile, getActivity, getAllUsernames };

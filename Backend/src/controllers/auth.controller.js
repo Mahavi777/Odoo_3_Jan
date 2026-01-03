@@ -1,11 +1,11 @@
-const User = require("../models/User");
-const Activity = require("../models/Activity");
-const Otp = require("../models/Otp");
-const jwt = require("jsonwebtoken");
-const nodemailer = require("nodemailer");
-const axios = require("axios");
-const passport = require("passport");
-const GoogleStrategy = require("passport-google-oauth20").Strategy;
+import User from "../models/User.js";
+import Activity from "../models/Activity.js";
+import Otp from "../models/Otp.js";
+import jwt from "jsonwebtoken";
+import nodemailer from "nodemailer";
+import axios from "axios";
+import passport from "passport";
+import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 
 // Email transporter configuration
 const transporter = nodemailer.createTransport({
@@ -529,4 +529,4 @@ const googleAuthCallback = (req, res) => {
   })(req, res);
 };
 
-module.exports = { signup, signin, verifyOtp, googleSignin, googleAuth, googleAuthCallback, githubCallback };
+export { signup, signin, verifyOtp, googleSignin, googleAuth, googleAuthCallback, githubCallback };

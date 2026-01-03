@@ -1,5 +1,5 @@
-const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
+import mongoose from 'mongoose';
+const { Schema } = mongoose;
 
 const salaryAndBankInfoSchema = new Schema({
   user: {
@@ -33,4 +33,4 @@ const salaryAndBankInfoSchema = new Schema({
   timestamps: true,
 });
 
-module.exports = mongoose.model('SalaryAndBankInfo', salaryAndBankInfoSchema);
+export default mongoose.model('SalaryAndBankInfo', salaryAndBankInfoSchema);
