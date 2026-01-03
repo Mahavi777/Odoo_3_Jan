@@ -4,14 +4,6 @@ import Input from '../../components/common/Input';
 import Button from '../../components/common/Button';
 import { getProfile, updateProfile } from '../../api/auth.api';
 
-const Profile = ({ user, onLogout }) => {
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
-  import React, { useState, useEffect } from 'react';
-  import { useNavigate } from 'react-router-dom';
-  import Input from '../../components/common/Input';
-  import Button from '../../components/common/Button';
-  import { getProfile, updateProfile } from '../../api/auth.api';
 
   const Profile = ({ user, onLogout }) => {
     const [profile, setProfile] = useState(null);
@@ -239,6 +231,6 @@ const Profile = ({ user, onLogout }) => {
         </div>
       </div>
     );
-  };
+}
 
-  export default Profile;
+export default Profile;
