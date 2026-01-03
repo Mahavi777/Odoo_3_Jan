@@ -1,17 +1,9 @@
 import Attendance from '../models/Attendance.js';
 import Activity from '../models/Activity.js';
 import User from '../models/User.js';
-<<<<<<< HEAD
 import { startOfDay } from '../utils/date.util.js';
 import { generateDailyAttendance } from '../services/attendance.service.js';
-=======
 
-function startOfDay(date) {
-  const d = new Date(date);
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
->>>>>>> 2d8b04120d7fd7b709cfea99b3a6f39997900c6b
 
 // POST /api/attendance/checkin
 export const checkIn = async (req, res) => {
@@ -55,9 +47,8 @@ export const checkIn = async (req, res) => {
 export const checkOut = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { breakTime } = req.body; // breakTime in minutes
+    const { breakTime } = req.body; // breakTime in minutes (may be string)
     const today = startOfDay(new Date());
-    const checkOutTime = new Date();
 
     let attendance = await Attendance.findOne({ user: userId, date: today });
     if (!attendance) {
@@ -69,41 +60,32 @@ export const checkOut = async (req, res) => {
     if (attendance.checkOut) {
       return res.status(400).json({ message: 'Already checked out for today' });
     }
+    // parse breakTime safely
+    const breakMinutes = Number.isFinite(Number(breakTime)) ? Number(breakTime) : 0;
 
-<<<<<<< HEAD
-    attendance.checkOut = new Date();
-    attendance.breakTime = breakTime || 0;
-
-    if (attendance.checkIn) {
-      const checkInTime = attendance.checkIn.getTime();
-      const checkOutTime = attendance.checkOut.getTime();
-      const totalDuration = (checkOutTime - checkInTime) / (1000 * 60 * 60); // in hours
-      const totalWork = totalDuration - (attendance.breakTime / 60);
-      attendance.totalWorkingHours = totalWork > 0 ? totalWork : 0;
-    }
-    
-    // if checkIn exists ensure status is Present
-    attendance.status = attendance.status || 'Present';
-=======
+    const checkOutTime = new Date();
     attendance.checkOut = checkOutTime;
     attendance.checkOutTime = checkOutTime;
+    attendance.breakTime = breakMinutes;
     attendance.status = 'Present';
-    
-    // Calculate total working hours
+
+    // Calculate total working hours in hours (decimal)
     if (attendance.checkIn && attendance.checkOut) {
-      const diffMs = attendance.checkOut - attendance.checkIn;
-      attendance.totalWorkingHours = parseFloat((diffMs / (1000 * 60 * 60)).toFixed(2));
+      const diffMs = new Date(attendance.checkOut).getTime() - new Date(attendance.checkIn).getTime();
+      const hours = diffMs / (1000 * 60 * 60);
+      const workedHours = hours - (attendance.breakTime / 60);
+      attendance.totalWorkingHours = parseFloat((workedHours > 0 ? workedHours : 0).toFixed(2));
     }
->>>>>>> 2d8b04120d7fd7b709cfea99b3a6f39997900c6b
 
     await attendance.save();
 
     await Activity.create({ user: userId, activityType: 'login', description: 'Checked out' });
 
-    res.json({ message: 'Checked out successfully', attendance });
+    return res.json({ message: 'Checked out successfully', attendance });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Checkout error:', err);
+    // Return error message to help debugging (remove in production)
+    res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
 

@@ -1,14 +1,8 @@
 import React, { useState, useEffect } from 'react';
-<<<<<<< HEAD
 import { User, Mail, Phone, Building2, MapPin, Calendar, Edit2, Save, X, Plus, Trash2, Award, Briefcase } from 'lucide-react';
 import { getProfile, updateProfile } from '../../api/auth.api';
-
-=======
-import { User, Mail, Phone, Building2, MapPin, Calendar, Edit2, Save, X, Loader2, Users, Search } from 'lucide-react';
-import { getProfile, updateProfile, updatePersonalInfo } from '../../api/auth.api';
 import api from '../../services/api';
 import { toast } from 'react-toastify';
->>>>>>> dc5923f658d811feb9a2eb14cb10ec493e6b2d2d
 
 const getUserProfile = async (userId) => {
   const res = await api.get(`/profile/user/${userId}`);

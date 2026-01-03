@@ -129,7 +129,7 @@ const CheckInOut = ({ onStatusChange }) => {
 
   return (
     <div className={`bg-white rounded-2xl shadow-lg p-6 border-2 ${statusConfig.borderColor} transition-all duration-300`}>
-      <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
         {/* Status Indicator Section */}
         <div className="flex items-center gap-4 flex-1">
           {/* Status Dot */}
@@ -177,7 +177,7 @@ const CheckInOut = ({ onStatusChange }) => {
           <button
             onClick={handleCheckIn}
             disabled={status === 'checked_in' || status === 'checked_out' || actionLoading}
-            className={`px-8 py-4 rounded-xl font-bold text-white transition-all shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${
+            className={`relative z-20 px-8 py-4 rounded-xl font-bold text-white transition-all shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${
               status === 'checked_in' || status === 'checked_out'
                 ? 'bg-gray-400'
                 : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700'
@@ -200,7 +200,7 @@ const CheckInOut = ({ onStatusChange }) => {
           <button
             onClick={handleCheckOut}
             disabled={status !== 'checked_in' || actionLoading}
-            className={`px-8 py-4 rounded-xl font-bold text-white transition-all shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${
+            className={`relative z-20 px-8 py-4 rounded-xl font-bold text-white transition-all shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${
               status !== 'checked_in'
                 ? 'bg-gray-400'
                 : 'bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700'

@@ -75,32 +75,37 @@ export default function EmployeeAttendance() {
           <p className="text-gray-600 mt-1">View your daily attendance records and work hours</p>
         </div>
 
-        {/* Check In/Out Buttons */}
-        <div className="mb-6 flex gap-4 items-center">
-          <button
-            onClick={handleCheckIn}
-            disabled={todayAttendance?.checkIn}
-            className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium transition-all shadow-md"
-          >
-            Check In
-          </button>
-          <input
-            type="number"
-            value={breakTime}
-            onChange={(e) => setBreakTime(e.target.value)}
-            placeholder="Break (mins)"
-            className="px-4 py-2 border rounded-lg w-32"
-          />
-          <button
-            onClick={handleCheckOut}
-            disabled={!todayAttendance?.checkIn || todayAttendance?.checkOut}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium transition-all shadow-md"
-          >
-            Check Out
-          </button>
-        {/* Check In/Out Component */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 border-2 border-indigo-100">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+        {/* Check In/Out Buttons + Card (left actions, right main card) */}
+        <div className="mb-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handleCheckIn}
+                disabled={todayAttendance?.checkIn}
+                className="relative z-20 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium transition-all shadow-md"
+              >
+                Check In
+              </button>
+              <input
+                type="number"
+                value={breakTime}
+                onChange={(e) => setBreakTime(e.target.value)}
+                placeholder="Break (mins)"
+                className="px-4 py-2 border rounded-lg w-32"
+              />
+              <button
+                onClick={handleCheckOut}
+                disabled={!todayAttendance?.checkIn || todayAttendance?.checkOut}
+                className="relative z-20 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium transition-all shadow-md"
+              >
+                Check Out
+              </button>
+            </div>
+
+            <div className="flex-1">
+              {/* Check In/Out Component */}
+              <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 border-2 border-indigo-100">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
             {/* Status Indicator */}
             <div className="flex items-center gap-4">
               <div className={`w-16 h-16 rounded-full flex items-center justify-center ${
@@ -139,9 +144,9 @@ export default function EmployeeAttendance() {
               <button
                 onClick={handleCheckIn}
                 disabled={todayAttendance?.checkIn}
-                className={`px-8 py-4 rounded-xl font-bold text-white transition-all shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${
+                className={`relative z-20 px-8 py-4 rounded-xl font-bold text-white transition-all shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${
                   todayAttendance?.checkIn 
-                    ? 'bg-gray-400' 
+                    ? 'bg.gray-400' 
                     : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700'
                 }`}
               >
@@ -153,7 +158,7 @@ export default function EmployeeAttendance() {
               <button
                 onClick={handleCheckOut}
                 disabled={!todayAttendance?.checkIn || todayAttendance?.checkOut}
-                className={`px-8 py-4 rounded-xl font-bold text-white transition-all shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${
+                className={`relative z-20 px-8 py-4 rounded-xl font-bold text-white transition-all shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${
                   !todayAttendance?.checkIn || todayAttendance?.checkOut
                     ? 'bg-gray-400'
                     : 'bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700'
@@ -164,6 +169,8 @@ export default function EmployeeAttendance() {
                   <span>Check Out</span>
                 </div>
               </button>
+            </div>
+          </div>
             </div>
           </div>
         </div>

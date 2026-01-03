@@ -83,6 +83,8 @@ function App() {
         <Route
           path="/salary"
           element={<PrivateRoute><Salary user={user} onLogout={handleLogout} /></PrivateRoute>}
+        />
+        <Route
           path="/employee/:employeeId"
           element={<PrivateRoute><ViewEmployeeInfo user={user} onLogout={handleLogout} /></PrivateRoute>}
         />

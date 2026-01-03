@@ -134,13 +134,13 @@ export default function AdminHRTimeOff() {
 
           {/* View Section & Filters */}
           <div className="p-6 border-b border-gray-200">
-            <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
               <button className="flex items-center gap-2 px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white font-medium rounded-lg transition-all">
                 <Calendar size={18} />
                 VIEW
               </button>
               
-              <div className="flex flex-col md:flex-row gap-4 flex-1 md:ml-6 w-full md:w-auto">
+              <div className="flex flex-col sm:flex-row gap-4 flex-1 sm:ml-6 w-full sm:w-auto">
                 {/* Search Bar */}
                 <div className="relative flex-1 max-w-md">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />

@@ -1,20 +1,14 @@
 import React, { useState, useEffect } from 'react';
-<<<<<<< HEAD
+
 import { User, Mail, Phone, Building2, MapPin, Calendar, Edit2, Save, X } from 'lucide-react';
-import { getProfile, updateProfile } from '../../api/auth.api';
-=======
-import { User, Mail, Phone, Building2, MapPin, Calendar, Edit2, Save, X, Loader2 } from 'lucide-react';
 import { getProfile, updateProfile } from '../../api/auth.api';
 import { updatePersonalInfo } from '../../api/auth.api';
 import { toast } from 'react-toastify';
 import api from '../../services/api';
->>>>>>> 671ca5dd7e29650f2df2e7d4b72449c8de40e9af
 
 export default function EmployeeProfile() {
   const [activeTab, setActiveTab] = useState('resume');
   const [isEditing, setIsEditing] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [profileData, setProfileData] = useState(null);
   const [formData, setFormData] = useState({});
 
@@ -138,45 +132,6 @@ export default function EmployeeProfile() {
     };
     load();
   }, []);
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      const payload = {
-        fullName: profileData.name,
-        jobPosition: profileData.jobPosition,
-        email: profileData.email,
-        phone: profileData.mobile,
-        department: profileData.department,
-        manager: profileData.manager,
-        location: profileData.location,
-        dateOfJoining: profileData.dateOfJoining,
-        accountNumber: profileData.accountNumber,
-        bankName: profileData.bankName,
-        ifscCode: profileData.ifscCode,
-        panNo: profileData.panNo,
-        uanNo: profileData.uanNo,
-      };
-
-      const updated = await updateProfile(payload);
-      setProfileData(prev => ({
-        ...prev,
-        name: updated.fullName || prev.name,
-        jobPosition: updated.jobPosition || prev.jobPosition,
-        email: updated.email || prev.email,
-        mobile: updated.phone || prev.mobile,
-        department: updated.department || prev.department,
-        location: updated.location || prev.location,
-        dateOfJoining: updated.dateOfJoining ? new Date(updated.dateOfJoining).toISOString().slice(0,10) : prev.dateOfJoining,
-      }));
-      setIsEditing(false);
-    } catch (err) {
-      console.error('Failed to save profile', err);
-      alert(err?.response?.data?.message || 'Failed to save profile');
-    } finally {
-      setSaving(false);
-    }
-  };
 
   const tabs = [
     { id: 'resume', label: 'Resume' },
@@ -505,14 +460,11 @@ export default function EmployeeProfile() {
               <button
                 onClick={handleSave}
                 disabled={saving}
-<<<<<<< HEAD
                 className="w-full md:w-auto px-10 py-4 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white font-bold rounded-xl transition-all transform hover:scale-105 flex items-center justify-center gap-3 shadow-lg shadow-emerald-500/50 disabled:opacity-60"
               >
                 <Save size={22} />
                 {saving ? 'Saving...' : 'Save Changes'}
-=======
                 className="w-full md:w-auto px-10 py-4 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white font-bold rounded-xl transition-all transform hover:scale-105 flex items-center justify-center gap-3 shadow-lg shadow-emerald-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
                 {saving ? (
                   <>
                     <Loader2 className="animate-spin" size={22} />
@@ -524,7 +476,6 @@ export default function EmployeeProfile() {
                     Save Changes
                   </>
                 )}
->>>>>>> 671ca5dd7e29650f2df2e7d4b72449c8de40e9af
               </button>
             </div>
           )}
