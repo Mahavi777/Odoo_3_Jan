@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { User, Mail, Phone, Building2, MapPin, Calendar, Edit2, Save, X, Loader2, Users, Search } from 'lucide-react';
-import { getProfile, updateProfile, updatePersonalInfo } from '../../api/auth.api';
+import { User, Mail, Phone, Building2, MapPin, Calendar, Edit2, Save, X, Plus, Trash2, Award, Briefcase } from 'lucide-react';
+import { getProfile, updateProfile } from '../../api/auth.api';
 import api from '../../services/api';
 import { toast } from 'react-toastify';
 
@@ -25,6 +25,67 @@ export default function AdminProfile({ user, onLogout }) {
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
 
+
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const data = await getProfile();
+        // Map server fields to component fields
+        setProfileData(prev => ({
+          ...prev,
+          name: data.fullName || prev.name,
+          loginId: data.loginId || data.email || prev.loginId,
+          email: data.email || prev.email,
+          mobile: data.phone || prev.mobile,
+          company: data.company?.name || prev.company,
+          department: data.department || prev.department,
+          manager: (data.manager && (data.manager.fullName || data.manager)) || prev.manager,
+          location: data.location || prev.location,
+          about: data.about || prev.about,
+        }));
+      } catch (err) {
+        console.error('Failed to load profile', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const payload = {
+        fullName: profileData.name,
+        email: profileData.email,
+        phone: profileData.mobile,
+        department: profileData.department,
+        manager: profileData.manager,
+        location: profileData.location,
+        // other fields can be added as needed
+      };
+      const updated = await updateProfile(payload);
+      // Map back
+      setProfileData(prev => ({
+        ...prev,
+        name: updated.fullName || prev.name,
+        email: updated.email || prev.email,
+        mobile: updated.phone || prev.mobile,
+        department: updated.department || prev.department,
+        location: updated.location || prev.location,
+      }));
+      setIsEditing(false);
+    } catch (err) {
+      console.error('Failed to save profile', err);
+      alert(err?.response?.data?.message || 'Failed to save profile');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const [newSkill, setNewSkill] = useState('');
+  const [newCertification, setNewCertification] = useState('');
   useEffect(() => {
     loadProfile();
     if (activeTab === 'employees') {
@@ -84,46 +145,6 @@ export default function AdminProfile({ user, onLogout }) {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSave = async () => {
-    try {
-      setSaving(true);
-      
-      // Update main profile (Admin can update all fields)
-      const profileUpdate = {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        fullName: `${formData.firstName} ${formData.lastName}`.trim(),
-        phone: formData.phone,
-        jobPosition: formData.jobPosition,
-        department: formData.department,
-        location: formData.location,
-        dateOfJoining: formData.dateOfJoining,
-        status: formData.status,
-      };
-
-      await updateProfile(profileUpdate);
-
-      // Update personal info
-      await updatePersonalInfo({
-        address: formData.address,
-        phone: formData.phone,
-        personalEmail: formData.personalEmail,
-        gender: formData.gender,
-        dateOfBirth: formData.dateOfBirth,
-        maritalStatus: formData.maritalStatus,
-        nationality: formData.nationality,
-      });
-
-      toast.success('Profile updated successfully!');
-      setIsEditing(false);
-      loadProfile();
-    } catch (error) {
-      console.error('Error saving profile:', error);
-      toast.error(error.response?.data?.message || 'Failed to update profile');
-    } finally {
-      setSaving(false);
-    }
-  };
 
   const handleEmployeeSelect = async (employeeId) => {
     try {
@@ -511,10 +532,15 @@ export default function AdminProfile({ user, onLogout }) {
           {isEditing && (
             <div className="px-8 pb-8">
               <button
+                onClick={handleSave}
+                disabled={saving}
+                className="w-full md:w-auto px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-medium rounded-lg transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-60"
+              >
+                <Save size={20} />
+                {saving ? 'Saving...' : 'Save Changes'}
                 onClick={isManagingEmployee ? handleEmployeeSave : handleSave}
                 disabled={saving}
                 className="w-full md:w-auto px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-medium rounded-lg transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
                 {saving ? (
                   <>
                     <Loader2 className="animate-spin" size={20} />

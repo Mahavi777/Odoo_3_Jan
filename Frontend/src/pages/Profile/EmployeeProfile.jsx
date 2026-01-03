@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { User, Mail, Phone, Building2, MapPin, Calendar, Edit2, Save, X, Loader2 } from 'lucide-react';
+
+import { User, Mail, Phone, Building2, MapPin, Calendar, Edit2, Save, X } from 'lucide-react';
 import { getProfile, updateProfile } from '../../api/auth.api';
 import { updatePersonalInfo } from '../../api/auth.api';
 import { toast } from 'react-toastify';
@@ -8,8 +9,6 @@ import api from '../../services/api';
 export default function EmployeeProfile() {
   const [activeTab, setActiveTab] = useState('resume');
   const [isEditing, setIsEditing] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [profileData, setProfileData] = useState(null);
   const [formData, setFormData] = useState({});
 
@@ -98,6 +97,41 @@ export default function EmployeeProfile() {
       setSaving(false);
     }
   };
+
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const data = await getProfile();
+        setProfileData(prev => ({
+          ...prev,
+          name: data.fullName || prev.name,
+          jobPosition: data.jobPosition || prev.jobPosition,
+          email: data.email || prev.email,
+          mobile: data.phone || prev.mobile,
+          company: data.company?.name || prev.company,
+          department: data.department || prev.department,
+          manager: (data.manager && (data.manager.fullName || data.manager)) || prev.manager,
+          location: data.location || prev.location,
+          dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth).toISOString().slice(0,10) : prev.dateOfBirth,
+          dateOfJoining: data.dateOfJoining ? new Date(data.dateOfJoining).toISOString().slice(0,10) : prev.dateOfJoining,
+          accountNumber: data.accountNumber || prev.accountNumber,
+          bankName: data.bankName || prev.bankName,
+          ifscCode: data.ifscCode || prev.ifscCode,
+          panNo: data.panNo || prev.panNo,
+          uanNo: data.uanNo || prev.uanNo,
+          empCode: data.empCode || prev.empCode,
+        }));
+      } catch (err) {
+        console.error('Failed to load profile', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
 
   const tabs = [
     { id: 'resume', label: 'Resume' },
@@ -426,8 +460,11 @@ export default function EmployeeProfile() {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="w-full md:w-auto px-10 py-4 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white font-bold rounded-xl transition-all transform hover:scale-105 flex items-center justify-center gap-3 shadow-lg shadow-emerald-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full md:w-auto px-10 py-4 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white font-bold rounded-xl transition-all transform hover:scale-105 flex items-center justify-center gap-3 shadow-lg shadow-emerald-500/50 disabled:opacity-60"
               >
+                <Save size={22} />
+                {saving ? 'Saving...' : 'Save Changes'}
+                className="w-full md:w-auto px-10 py-4 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white font-bold rounded-xl transition-all transform hover:scale-105 flex items-center justify-center gap-3 shadow-lg shadow-emerald-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
                 {saving ? (
                   <>
                     <Loader2 className="animate-spin" size={22} />

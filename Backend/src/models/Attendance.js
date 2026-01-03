@@ -17,17 +17,15 @@ const attendanceSchema = new Schema({
   checkOut: {
     type: Date,
   },
-<<<<<<< HEAD
   breakTime: {
     type: Number, // in minutes
     default: 0,
-=======
+  },
   checkInTime: {
     type: Date,
   },
   checkOutTime: {
     type: Date,
->>>>>>> 2d8b04120d7fd7b709cfea99b3a6f39997900c6b
   },
   totalWorkingHours: {
     type: Number,

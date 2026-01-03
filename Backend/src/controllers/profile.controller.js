@@ -11,7 +11,8 @@ import { checkRole } from '../middleware/role.middleware.js';
 // Multer configuration for file uploads
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'uploads/');
+    // Save uploads in Backend/src/uploads/profile-pictures
+    cb(null, 'src/uploads/profile-pictures');
   },
   filename: function (req, file, cb) {
     cb(null, `${req.user.id}-${Date.now()}${path.extname(file.originalname)}`);
@@ -31,11 +32,8 @@ function checkFileType(file, cb) {
   const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
   const mimetype = filetypes.test(file.mimetype);
 
-  if (mimetype && extname) {
-    return cb(null, true);
-  } else {
-    cb('Error: Images Only!');
-  }
+  if (mimetype && extname) return cb(null, true);
+  return cb(new Error('Images Only!'));
 }
 
 // @route   PUT /api/profile/avatar
@@ -44,30 +42,30 @@ function checkFileType(file, cb) {
 const updateAvatar = (req, res) => {
   upload(req, res, async (err) => {
     if (err) {
-      return res.status(400).json({ message: err });
+      console.error('Upload error:', err);
+      return res.status(400).json({ message: err.message || err });
     }
-    if (req.file == undefined) {
-      return res.status(400).json({ message: 'Error: No File Selected!' });
-    }
+
+    if (!req.file) return res.status(400).json({ message: 'Error: No File Selected!' });
 
     try {
       const user = await User.findById(req.user.id);
-      if (!user) {
-        return res.status(404).json({ message: 'User not found' });
-      }
+      if (!user) return res.status(404).json({ message: 'User not found' });
 
-      // The path should be accessible from the frontend
-      const avatarPath = `/uploads/${req.file.filename}`;
-      // store in `profileImage` field (matches User model)
+      // Path exposed for frontend; ensure static middleware serves '/uploads'
+      const avatarPath = `/uploads/profile-pictures/${req.file.filename}`;
       user.profileImage = avatarPath;
       await user.save();
 
-      res.json({
-        message: 'Avatar updated successfully',
-        profileImage: avatarPath,
-      });
+      try {
+        await Activity.create({ user: user._id, activityType: 'profile_update', description: 'User updated avatar.' });
+      } catch (activityErr) {
+        console.error('Activity log failed:', activityErr);
+      }
+
+      res.json({ message: 'Avatar updated successfully', profileImage: avatarPath });
     } catch (error) {
-      console.error(error);
+      console.error('updateAvatar error:', error);
       res.status(500).send('Server Error');
     }
   });
@@ -78,22 +76,13 @@ const updateAvatar = (req, res) => {
 // @access  Private
 const getProfile = async (req, res) => {
   try {
-    // req.user is attached by the protect middleware
     const user = await User.findById(req.user.id).select('-password').populate('manager', 'fullName email');
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
+    if (!user) return res.status(404).json({ message: 'User not found' });
 
-    // Get personal info
     const personalInfo = await PersonalInfo.findOne({ user: req.user.id });
-    
-    // Get salary and bank info
     const salaryInfo = await SalaryAndBankInfo.findOne({ user: req.user.id });
-    
-    // Get payroll info
     const payroll = await Payroll.findOne({ user: req.user.id });
 
-    // Derive firstName/lastName from fullName for frontend compatibility
     const userObj = user.toObject();
     if (userObj.fullName) {
       const parts = userObj.fullName.split(' ');
@@ -104,20 +93,13 @@ const getProfile = async (req, res) => {
       userObj.lastName = userObj.lastName || '';
     }
 
-    // Normalize profile image property
     userObj.profileImage = userObj.profileImage || '';
 
-    // Combine all profile data
-    const profileData = {
-      ...userObj,
-      personalInfo: personalInfo || {},
-      salaryInfo: salaryInfo || {},
-      payroll: payroll || null,
-    };
+    const profileData = { ...userObj, personalInfo: personalInfo || {}, salaryInfo: salaryInfo || {}, payroll: payroll || null };
 
     res.json(profileData);
   } catch (err) {
-    console.error(err.message);
+    console.error('getProfile error:', err.message || err);
     res.status(500).send('Server Error');
   }
 };
@@ -126,106 +108,92 @@ const getProfile = async (req, res) => {
 // @desc    Update user profile
 // @access  Private
 const updateProfile = async (req, res) => {
-    try {
-        const user = await User.findById(req.user.id);
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
 
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
+    const { fullName, firstName, lastName, phone, jobPosition, department, manager, location, dateOfJoining, status, address } = req.body;
 
-        const { fullName, firstName, lastName, email, phone, jobPosition, department, manager, location, dateOfJoining, status, address } = req.body;
-        
-        // Handle firstName/lastName to fullName conversion
-        let finalFullName = fullName;
-        if (!finalFullName && (firstName || lastName)) {
-            finalFullName = `${firstName || ''} ${lastName || ''}`.trim();
-        }
-        if (!finalFullName) {
-            finalFullName = user.fullName;
-        }
+    let finalFullName = fullName;
+    if (!finalFullName && (firstName || lastName)) finalFullName = `${firstName || ''} ${lastName || ''}`.trim();
 
-        const updatedFields = {};
-        if (finalFullName) updatedFields.fullName = finalFullName;
-        if (phone !== undefined) updatedFields.phone = phone;
-        if (jobPosition !== undefined) updatedFields.jobPosition = jobPosition;
-        if (department !== undefined) updatedFields.department = department;
-        if (manager !== undefined) updatedFields.manager = manager;
-        if (location !== undefined) updatedFields.location = location;
-        if (dateOfJoining !== undefined) updatedFields.dateOfJoining = dateOfJoining;
-        if (status !== undefined) updatedFields.status = status;
-        // Don't allow email change through this endpoint for security
+    const updatedFields = {};
+    if (finalFullName) updatedFields.fullName = finalFullName;
+    if (phone !== undefined) updatedFields.phone = phone;
+    if (jobPosition !== undefined) updatedFields.jobPosition = jobPosition;
+    if (department !== undefined) updatedFields.department = department;
+    if (manager !== undefined) updatedFields.manager = manager;
+    if (location !== undefined) updatedFields.location = location;
+    if (dateOfJoining !== undefined) updatedFields.dateOfJoining = dateOfJoining;
+    if (status !== undefined) updatedFields.status = status;
 
-        const updatedUser = await User.findByIdAndUpdate(req.user.id, { $set: updatedFields }, { new: true }).select('-password');
-        
-        // Update personal info if address is provided
-        if (address !== undefined) {
-            try {
-                await PersonalInfo.findOneAndUpdate(
-                    { user: req.user.id },
-                    { $set: { address } },
-                    { upsert: true, new: true }
-                );
-            } catch (personalInfoError) {
-                console.error('Error updating personal info:', personalInfoError);
-                // Continue even if personal info update fails
-            }
-        }
+    const updatedUser = await User.findByIdAndUpdate(req.user.id, { $set: updatedFields }, { new: true }).select('-password');
 
-        // Log activity (don't fail if this fails)
-        try {
-            await Activity.create({ 
-                user: user._id, 
-                activityType: 'profile_update', 
-                description: 'User updated their profile.' 
-            });
-        } catch (activityError) {
-            console.error('Error logging activity:', activityError);
-            // Continue even if activity logging fails
-        }
-
-        // Return user with firstName/lastName for frontend compatibility
-        const userObj = updatedUser.toObject();
-        if (userObj.fullName) {
-            const parts = userObj.fullName.split(' ');
-            userObj.firstName = parts.shift();
-            userObj.lastName = parts.join(' ');
-        }
-        
-        res.json(userObj);
-    } catch (err) {
-        console.error('Update profile error:', err);
-        res.status(500).json({ message: 'Server error', error: err.message });
+    if (address !== undefined) {
+      try {
+        await PersonalInfo.findOneAndUpdate({ user: req.user.id }, { $set: { address } }, { upsert: true, new: true });
+      } catch (personalInfoError) {
+        console.error('Error updating personal info:', personalInfoError);
+      }
     }
+
+    try {
+      await Activity.create({ user: user._id, activityType: 'profile_update', description: 'User updated their profile.' });
+    } catch (activityError) {
+      console.error('Error logging activity:', activityError);
+    }
+
+    const userObj = updatedUser.toObject();
+    if (userObj.fullName) {
+      const parts = userObj.fullName.split(' ');
+      userObj.firstName = parts.shift();
+      userObj.lastName = parts.join(' ');
+    }
+
+    res.json(userObj);
+  } catch (err) {
+    console.error('Update profile error:', err);
+    if (err.code === 11000) return res.status(400).json({ message: 'Duplicate field value', details: err.keyValue });
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
 };
 
 // @route   GET api/profile/activity
 // @desc    Get user activity
 // @access  Private
 const getActivity = async (req, res) => {
-    try {
-        const activities = await Activity.find({ user: req.user.id }).sort({ createdAt: -1 });
-        res.json(activities);
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server Error');
-    }
+  try {
+    const activities = await Activity.find({ user: req.user.id }).sort({ createdAt: -1 });
+    res.json(activities);
+  } catch (err) {
+    console.error('getActivity error:', err.message || err);
+    res.status(500).send('Server Error');
+  }
 };
-
 
 // @route   GET api/profile/usernames
 // @desc    Get all usernames (for technician list)
-// @access  Private (assuming protect middleware is applied)
+// @access  Private
 const getAllUsernames = async (req, res) => {
   try {
-    const users = await User.find({}).select('_id username firstName lastName'); // Select _id, username, firstName, lastName
-    res.json(users.map(user => ({
-      _id: user._id,
-      username: user.username,
-      firstName: user.firstName,
-      lastName: user.lastName,
-    })));
+    const users = await User.find({}).select('_id username firstName lastName');
+    res.json(users.map((user) => ({ _id: user._id, username: user.username, firstName: user.firstName, lastName: user.lastName })));
   } catch (err) {
-    console.error(err.message);
+    console.error('getAllUsernames error:', err.message || err);
+    res.status(500).send('Server Error');
+  }
+};
+
+// ===== Admin utilities =====
+// @route   GET api/profile
+// @desc    Get all users (admin)
+// @access  Private (ADMIN)
+const getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find({}).select('-password');
+    res.json(users);
+  } catch (err) {
+    console.error('getAllUsers error:', err.message || err);
     res.status(500).send('Server Error');
   }
 };
@@ -237,14 +205,12 @@ const updatePersonalInfo = async (req, res) => {
   try {
     const userId = req.user.id;
     const user = await User.findById(userId);
-    const isAdmin = user.role === 'ADMIN' || user.role === 'HR';
+    const isAdmin = user && (user.role === 'ADMIN' || user.role === 'HR');
 
     const { address, phone, personalEmail, gender, dateOfBirth, maritalStatus, nationality } = req.body;
 
-    // Employees can only update limited fields
     const updateData = {};
     if (isAdmin) {
-      // Admin can update all fields
       if (address !== undefined) updateData.address = address;
       if (phone !== undefined) updateData.phone = phone;
       if (personalEmail !== undefined) updateData.personalEmail = personalEmail;
@@ -253,32 +219,20 @@ const updatePersonalInfo = async (req, res) => {
       if (maritalStatus !== undefined) updateData.maritalStatus = maritalStatus;
       if (nationality !== undefined) updateData.nationality = nationality;
     } else {
-      // Employees can only update address and phone
       if (address !== undefined) updateData.address = address;
       if (phone !== undefined) updateData.phone = phone;
     }
 
-    // Update user phone if provided
     if (phone && !isAdmin) {
       await User.findByIdAndUpdate(userId, { phone });
     }
 
-    const personalInfo = await PersonalInfo.findOneAndUpdate(
-      { user: userId },
-      { $set: updateData },
-      { new: true, upsert: true }
-    );
+    const personalInfo = await PersonalInfo.findOneAndUpdate({ user: userId }, { $set: updateData }, { new: true, upsert: true });
 
-    // Log activity (don't fail if this fails)
     try {
-      await Activity.create({
-        user: userId,
-        activityType: 'profile_update',
-        description: 'Updated personal information',
-      });
+      await Activity.create({ user: userId, activityType: 'profile_update', description: 'Updated personal information' });
     } catch (activityError) {
       console.error('Error logging activity:', activityError);
-      // Continue even if activity logging fails
     }
 
     res.json(personalInfo);
@@ -295,9 +249,7 @@ const getUserProfile = async (req, res) => {
   try {
     const { userId } = req.params;
     const user = await User.findById(userId).select('-password').populate('manager', 'fullName email');
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
+    if (!user) return res.status(404).json({ message: 'User not found' });
 
     const personalInfo = await PersonalInfo.findOne({ user: userId });
     const salaryInfo = await SalaryAndBankInfo.findOne({ user: userId });
@@ -310,16 +262,54 @@ const getUserProfile = async (req, res) => {
       userObj.lastName = parts.join(' ');
     }
 
-    const profileData = {
-      ...userObj,
-      personalInfo: personalInfo || {},
-      salaryInfo: salaryInfo || {},
-      payroll: payroll || null,
-    };
+    const profileData = { ...userObj, personalInfo: personalInfo || {}, salaryInfo: salaryInfo || {}, payroll: payroll || null };
 
     res.json(profileData);
   } catch (err) {
-    console.error(err.message);
+    console.error('getUserProfile error:', err.message || err);
+    res.status(500).send('Server Error');
+  }
+};
+
+// @route   GET api/profile/:id
+// @desc    Get user by id (admin)
+// @access  Private (ADMIN)
+const getUserById = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select('-password');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    res.json(user);
+  } catch (err) {
+    console.error('getUserById error:', err.message || err);
+    res.status(500).send('Server Error');
+  }
+};
+
+// @route   PUT api/profile/:id
+// @desc    Update user by id (admin)
+// @access  Private (ADMIN)
+const updateUserById = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const updatable = ['fullName', 'email', 'phone', 'jobPosition', 'department', 'manager', 'location', 'dateOfJoining', 'status', 'role', 'employeeId'];
+    const updatedFields = {};
+    updatable.forEach((key) => {
+      if (req.body[key] !== undefined) updatedFields[key] = req.body[key];
+    });
+
+    const updatedUser = await User.findByIdAndUpdate(req.params.id, { $set: updatedFields }, { new: true }).select('-password');
+
+    try {
+      await Activity.create({ user: req.user.id, activityType: 'profile_update', description: `Admin updated user ${req.params.id}` });
+    } catch (activityError) {
+      console.error('Activity log error:', activityError);
+    }
+
+    res.json(updatedUser);
+  } catch (err) {
+    console.error('updateUserById error:', err.message || err);
     res.status(500).send('Server Error');
   }
 };
@@ -330,51 +320,38 @@ const getUserProfile = async (req, res) => {
 const updateUserProfile = async (req, res) => {
   try {
     const { userId } = req.params;
-    const {
-      fullName,
-      email,
-      phone,
-      jobPosition,
-      department,
-      manager,
-      location,
-      dateOfJoining,
-      status,
-      role,
-      employeeId,
-    } = req.body;
-
     const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
+    if (!user) return res.status(404).json({ message: 'User not found' });
 
+    const allowed = ['fullName', 'email', 'phone', 'jobPosition', 'department', 'manager', 'location', 'dateOfJoining', 'status', 'role', 'employeeId'];
     const updatedFields = {};
-    if (fullName !== undefined) updatedFields.fullName = fullName;
-    if (email !== undefined) updatedFields.email = email;
-    if (phone !== undefined) updatedFields.phone = phone;
-    if (jobPosition !== undefined) updatedFields.jobPosition = jobPosition;
-    if (department !== undefined) updatedFields.department = department;
-    if (manager !== undefined) updatedFields.manager = manager;
-    if (location !== undefined) updatedFields.location = location;
-    if (dateOfJoining !== undefined) updatedFields.dateOfJoining = dateOfJoining;
-    if (status !== undefined) updatedFields.status = status;
-    if (role !== undefined) updatedFields.role = role;
-    if (employeeId !== undefined) updatedFields.employeeId = employeeId;
+    allowed.forEach((k) => { if (req.body[k] !== undefined) updatedFields[k] = req.body[k]; });
 
     const updatedUser = await User.findByIdAndUpdate(userId, { $set: updatedFields }, { new: true }).select('-password');
 
-    await Activity.create({
-      user: req.user.id,
-      activityType: 'profile_update',
-      description: `Updated profile for user ${userId}`,
-    });
+    try {
+      await Activity.create({ user: req.user.id, activityType: 'profile_update', description: `Admin ${req.user.id} updated user ${userId}` });
+    } catch (activityError) {
+      console.error('Activity log error:', activityError);
+    }
 
     res.json(updatedUser);
   } catch (err) {
-    console.error(err.message);
+    console.error('updateUserProfile error:', err.message || err);
     res.status(500).send('Server Error');
   }
 };
 
-export { updateAvatar, getProfile, updateProfile, getActivity, getAllUsernames, updatePersonalInfo, getUserProfile, updateUserProfile };
+export {
+  updateAvatar,
+  getProfile,
+  updateProfile,
+  getActivity,
+  getAllUsernames,
+  getAllUsers,
+  updatePersonalInfo,
+  getUserProfile,
+  getUserById,
+  updateUserById,
+  updateUserProfile,
+};

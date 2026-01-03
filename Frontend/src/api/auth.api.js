@@ -24,11 +24,15 @@ export const updateProfile = async (data) => {
   return res.data;
 };
 
+
+// AI chat
+
 export const updatePersonalInfo = async (data) => {
   const res = await api.put('/profile/me/personal', data);
   return res.data;
 };
 
+// --- new Gemini API call ---
 // AI chat
 export const sendChatMessage = async (message) => {
   const res = await api.post('/ai/chat', { message });
