@@ -1,5 +1,5 @@
-const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
+import mongoose from 'mongoose';
+const { Schema } = mongoose;
 
 const activityLogSchema = new Schema({
   user: {
@@ -18,4 +18,4 @@ const activityLogSchema = new Schema({
   timestamps: true,
 });
 
-module.exports = mongoose.model('ActivityLog', activityLogSchema);
+export default mongoose.model('ActivityLog', activityLogSchema);

@@ -1,5 +1,5 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcrypt');
+import mongoose from 'mongoose';
+import bcrypt from 'bcrypt';
 
 const otpSchema = new mongoose.Schema({
     email: {
@@ -40,4 +40,4 @@ otpSchema.methods.compareOtp = async function (enteredOtp) {
 
 const Otp = mongoose.model('Otp', otpSchema);
 
-module.exports = Otp;
+export default Otp;

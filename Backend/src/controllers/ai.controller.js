@@ -1,6 +1,6 @@
-const { generateAIReply } = require("../services/aiService.js");
+import { generateAIReply } from "../services/aiService.js";
 
-const chat = async (req, res) => {
+export const chat = async (req, res) => {
   try {
     const { message, history = [] } = req.body;
 
@@ -15,5 +15,3 @@ const chat = async (req, res) => {
     res.status(500).json({ error: "AI request failed" });
   }
 };
-
-module.exports = { chat };

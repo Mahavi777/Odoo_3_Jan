@@ -29,3 +29,15 @@ export const getUserAttendance = async (userId, month, year) => {
 	const res = await api.get(`/attendance/user/${userId}`, { params });
 	return res.data;
 };
+
+export const getAllAttendance = async (opts = {}) => {
+	// opts: { month, year, userId }
+	const params = {};
+	if (opts.month && opts.year) {
+		params.month = opts.month;
+		params.year = opts.year;
+	}
+	if (opts.userId) params.userId = opts.userId;
+	const res = await api.get('/attendance/all', { params });
+	return res.data;
+};
