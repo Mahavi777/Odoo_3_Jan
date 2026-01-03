@@ -60,13 +60,13 @@ passport.deserializeUser(async (id, done) => {
 });
 // Signup
 const signup = async (req, res) => {
-  const { firstName, lastName, email, password } = req.body;
+  const { employeeId, firstName, lastName, email, password, role } = req.body;
 
   console.log("Signup attempt for email:", email);
   console.log("Request body:", req.body);
 
   // --- Validation ---
-  if (!firstName || !lastName || !email || !password) {
+  if (!employeeId || !firstName || !lastName || !email || !password) {
     return res.status(400).json({ message: "Missing required fields" });
   }
   const emailRegex = /\S+@\S+\.\S+/;
@@ -80,26 +80,77 @@ const signup = async (req, res) => {
       .status(400)
       .json({ message: "Password must be at least 6 characters long" });
   }
+  // Password security rules: at least one uppercase, one lowercase, one number
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/;
+  if (!passwordRegex.test(password)) {
+    return res
+      .status(400)
+      .json({ message: "Password must contain at least one uppercase letter, one lowercase letter, and one number" });
+  }
+  // Validate role
+  const validRoles = ['EMPLOYEE', 'HR', 'ADMIN'];
+  const userRole = role ? role.toUpperCase() : 'EMPLOYEE';
+  if (!validRoles.includes(userRole)) {
+    return res.status(400).json({ message: "Invalid role. Must be EMPLOYEE or HR" });
+  }
   // --- End of validation ---
 
   try {
-    let user = await User.findOne({ email });
+    let user = await User.findOne({ $or: [{ email }, { employeeId }] });
     if (user) {
-      return res.status(400).json({ message: "User already exists" });
+      if (user.email === email) {
+        return res.status(400).json({ message: "User with this email already exists" });
+      }
+      if (user.employeeId === employeeId) {
+        return res.status(400).json({ message: "Employee ID already exists" });
+      }
     }
 
     // Create fullName from firstName and lastName
     const fullName = `${firstName} ${lastName}`;
 
     user = new User({
+      employeeId,
       fullName,
       email,
       password,
-      role: 'EMPLOYEE', // Default role for new signups
+      role: userRole,
+      isEmailVerified: false, // Email verification required
     });
 
     await user.save();
     console.log("User created successfully:", email);
+
+    // Send email verification OTP
+    const verificationOtp = Math.floor(100000 + Math.random() * 900000).toString();
+    const newOtp = new Otp({ email: user.email, otp: verificationOtp });
+    await newOtp.save();
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: user.email,
+      subject: "Email Verification - Dayflow HRMS",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #4F46E5;">Welcome to Dayflow HRMS!</h2>
+          <p>Thank you for signing up. Please verify your email address using the OTP below:</p>
+          <div style="background-color: #F3F4F6; padding: 20px; text-align: center; margin: 20px 0;">
+            <h1 style="color: #4F46E5; font-size: 32px; letter-spacing: 5px;">${verificationOtp}</h1>
+          </div>
+          <p>This OTP will expire in 10 minutes.</p>
+          <p style="color: #6B7280; font-size: 12px;">If you didn't create this account, please ignore this email.</p>
+        </div>
+      `,
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.log("Error sending verification email:", error);
+        // Don't fail signup if email fails, but log it
+      } else {
+        console.log("Verification email sent: " + info.response);
+      }
+    });
 
     // --- ADDED JWT GENERATION ON SIGNUP ---
     // <-- 2. Create the payload for the token
@@ -529,4 +580,43 @@ const googleAuthCallback = (req, res) => {
   })(req, res);
 };
 
-export { signup, signin, verifyOtp, googleSignin, googleAuth, googleAuthCallback, githubCallback };
+// Email verification
+const verifyEmail = async (req, res) => {
+  const { email, otp } = req.body;
+
+  if (!email || !otp) {
+    return res.status(400).json({ message: 'Email and OTP are required' });
+  }
+
+  try {
+    const otpDoc = await Otp.findOne({ email }).sort({ createdAt: -1 });
+
+    if (!otpDoc) {
+      return res.status(400).json({ message: 'Invalid OTP or OTP expired' });
+    }
+
+    const isMatch = await otpDoc.compareOtp(otp);
+
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Invalid OTP' });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    user.isEmailVerified = true;
+    await user.save();
+
+    // Delete the used OTP
+    await Otp.deleteOne({ _id: otpDoc._id });
+
+    res.json({ message: 'Email verified successfully' });
+  } catch (err) {
+    console.error('Email verification error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export { signup, signin, verifyOtp, verifyEmail, googleSignin, googleAuth, googleAuthCallback, githubCallback };
