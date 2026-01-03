@@ -4,14 +4,11 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 import LandingPage from './pages/Landing';
-import SignUp from './pages/SignUp';
-import SignIn from './pages/Login';
-import Dashboard from './pages/Dashboard';
-import Profile from './pages/Profile';
-import ActivityPage from './pages/Activity';
-import ForgotPassword from './pages/ForgotPassword';
-import AuthCallback from './pages/AuthCallback';
-import VerifyOtp from './pages/VerifyOtp';
+import SignIn from './pages/auth/Login';
+import SignUp from './pages/auth/SignUp';
+import Profile from './pages/profile/Profile';
+import ForgotPassword from './pages/auth/ForgotPassword';
+import VerifyOtp from './pages/auth/VerifyOtp';
 import useAuth from './hooks/useAuth';
 
 const PrivateRoute = ({ children }) => {
