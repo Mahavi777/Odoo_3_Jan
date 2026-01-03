@@ -127,12 +127,24 @@ const updateProfile = async (req, res) => {
         };
 
         const updatedUser = await User.findByIdAndUpdate(req.user.id, { $set: updatedFields }, { new: true }).select('-password');
-        
-        await Activity.create({ user: user._id, action: 'profile_update', description: 'User updated their profile.' });
-        
+
+        await Activity.create({ user: user._id, activityType: 'profile_update', description: 'User updated their profile.' });
+
         res.json(updatedUser);
     } catch (err) {
-        console.error(err.message);
+        // Log full error for debugging
+        console.error('Update profile error:', err);
+
+        // Handle common duplicate key error (e.g., email unique index)
+        if (err.code === 11000) {
+          return res.status(400).json({ message: 'Duplicate field value', details: err.keyValue });
+        }
+
+        // Return more detailed error in non-production for easier debugging
+        if (process.env.NODE_ENV !== 'production') {
+          return res.status(500).json({ message: 'Server Error', error: err.message });
+        }
+
         res.status(500).send('Server Error');
     }
 };
@@ -169,4 +181,80 @@ const getAllUsernames = async (req, res) => {
   }
 };
 
-export { updateAvatar, getProfile, updateProfile, getActivity, getAllUsernames };
+// primary exports are declared at bottom after admin utilities
+
+// ===== Admin utilities: get all users, get user by id, update user by id =====
+// @route   GET api/profile
+// @desc    Get all users (admin)
+// @access  Private (ADMIN)
+const getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find({}).select('-password');
+    res.json(users);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+};
+
+// @route   GET api/profile/:id
+// @desc    Get user by id (admin)
+// @access  Private (ADMIN)
+const getUserById = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select('-password');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    res.json(user);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+};
+
+// @route   PUT api/profile/:id
+// @desc    Update user by id (admin)
+// @access  Private (ADMIN)
+const updateUserById = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const {
+      fullName,
+      email,
+      phone,
+      jobPosition,
+      department,
+      manager,
+      location,
+      dateOfJoining,
+      status,
+      role,
+    } = req.body;
+
+    const updatedFields = {
+      fullName: fullName ?? user.fullName,
+      email: email ?? user.email,
+      phone: phone ?? user.phone,
+      jobPosition: jobPosition ?? user.jobPosition,
+      department: department ?? user.department,
+      manager: manager ?? user.manager,
+      location: location ?? user.location,
+      dateOfJoining: dateOfJoining ?? user.dateOfJoining,
+      status: status ?? user.status,
+      role: role ?? user.role,
+    };
+
+    const updatedUser = await User.findByIdAndUpdate(req.params.id, { $set: updatedFields }, { new: true }).select('-password');
+
+    // Use existing activityType 'profile_update' which is in Activity enum
+    await Activity.create({ user: req.user._id, activityType: 'profile_update', description: `Admin ${req.user._id} updated user ${user._id}` });
+
+    res.json(updatedUser);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+};
+
+export { updateAvatar, getProfile, updateProfile, getActivity, getAllUsernames, getAllUsers, getUserById, updateUserById };

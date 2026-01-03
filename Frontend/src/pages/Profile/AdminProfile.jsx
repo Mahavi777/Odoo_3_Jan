@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, Mail, Phone, Building2, MapPin, Calendar, Edit2, Save, X, Plus, Trash2, Award, Briefcase } from 'lucide-react';
+import { getProfile, updateProfile } from '../../api/auth.api';
 
 export default function AdminProfile() {
   const [activeTab, setActiveTab] = useState('resume');
@@ -44,6 +45,66 @@ export default function AdminProfile() {
     skills: ['JavaScript', 'React', 'Node.js', 'MongoDB'],
     certifications: ['AWS Certified', 'PMP Certified']
   });
+
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const data = await getProfile();
+        // Map server fields to component fields
+        setProfileData(prev => ({
+          ...prev,
+          name: data.fullName || prev.name,
+          loginId: data.loginId || data.email || prev.loginId,
+          email: data.email || prev.email,
+          mobile: data.phone || prev.mobile,
+          company: data.company?.name || prev.company,
+          department: data.department || prev.department,
+          manager: (data.manager && (data.manager.fullName || data.manager)) || prev.manager,
+          location: data.location || prev.location,
+          about: data.about || prev.about,
+        }));
+      } catch (err) {
+        console.error('Failed to load profile', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const payload = {
+        fullName: profileData.name,
+        email: profileData.email,
+        phone: profileData.mobile,
+        department: profileData.department,
+        manager: profileData.manager,
+        location: profileData.location,
+        // other fields can be added as needed
+      };
+      const updated = await updateProfile(payload);
+      // Map back
+      setProfileData(prev => ({
+        ...prev,
+        name: updated.fullName || prev.name,
+        email: updated.email || prev.email,
+        mobile: updated.phone || prev.mobile,
+        department: updated.department || prev.department,
+        location: updated.location || prev.location,
+      }));
+      setIsEditing(false);
+    } catch (err) {
+      console.error('Failed to save profile', err);
+      alert(err?.response?.data?.message || 'Failed to save profile');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const [newSkill, setNewSkill] = useState('');
   const [newCertification, setNewCertification] = useState('');
@@ -506,11 +567,12 @@ export default function AdminProfile() {
           {isEditing && (
             <div className="px-8 pb-8">
               <button
-                onClick={() => setIsEditing(false)}
-                className="w-full md:w-auto px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-medium rounded-lg transition-all shadow-lg flex items-center justify-center gap-2"
+                onClick={handleSave}
+                disabled={saving}
+                className="w-full md:w-auto px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-medium rounded-lg transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-60"
               >
                 <Save size={20} />
-                Save Changes
+                {saving ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
           )}

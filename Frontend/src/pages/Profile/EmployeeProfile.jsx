@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, Mail, Phone, Building2, MapPin, Calendar, Edit2, Save, X } from 'lucide-react';
+import { getProfile, updateProfile } from '../../api/auth.api';
 
 export default function EmployeeProfile() {
   const [activeTab, setActiveTab] = useState('resume');
@@ -28,6 +29,80 @@ export default function EmployeeProfile() {
     uanNo: '100123456789',
     empCode: 'EMP001'
   });
+
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const data = await getProfile();
+        setProfileData(prev => ({
+          ...prev,
+          name: data.fullName || prev.name,
+          jobPosition: data.jobPosition || prev.jobPosition,
+          email: data.email || prev.email,
+          mobile: data.phone || prev.mobile,
+          company: data.company?.name || prev.company,
+          department: data.department || prev.department,
+          manager: (data.manager && (data.manager.fullName || data.manager)) || prev.manager,
+          location: data.location || prev.location,
+          dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth).toISOString().slice(0,10) : prev.dateOfBirth,
+          dateOfJoining: data.dateOfJoining ? new Date(data.dateOfJoining).toISOString().slice(0,10) : prev.dateOfJoining,
+          accountNumber: data.accountNumber || prev.accountNumber,
+          bankName: data.bankName || prev.bankName,
+          ifscCode: data.ifscCode || prev.ifscCode,
+          panNo: data.panNo || prev.panNo,
+          uanNo: data.uanNo || prev.uanNo,
+          empCode: data.empCode || prev.empCode,
+        }));
+      } catch (err) {
+        console.error('Failed to load profile', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const payload = {
+        fullName: profileData.name,
+        jobPosition: profileData.jobPosition,
+        email: profileData.email,
+        phone: profileData.mobile,
+        department: profileData.department,
+        manager: profileData.manager,
+        location: profileData.location,
+        dateOfJoining: profileData.dateOfJoining,
+        accountNumber: profileData.accountNumber,
+        bankName: profileData.bankName,
+        ifscCode: profileData.ifscCode,
+        panNo: profileData.panNo,
+        uanNo: profileData.uanNo,
+      };
+
+      const updated = await updateProfile(payload);
+      setProfileData(prev => ({
+        ...prev,
+        name: updated.fullName || prev.name,
+        jobPosition: updated.jobPosition || prev.jobPosition,
+        email: updated.email || prev.email,
+        mobile: updated.phone || prev.mobile,
+        department: updated.department || prev.department,
+        location: updated.location || prev.location,
+        dateOfJoining: updated.dateOfJoining ? new Date(updated.dateOfJoining).toISOString().slice(0,10) : prev.dateOfJoining,
+      }));
+      setIsEditing(false);
+    } catch (err) {
+      console.error('Failed to save profile', err);
+      alert(err?.response?.data?.message || 'Failed to save profile');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const tabs = [
     { id: 'resume', label: 'Resume' },
@@ -434,11 +509,12 @@ export default function EmployeeProfile() {
           {isEditing && (
             <div className="px-8 pb-8">
               <button
-                onClick={() => setIsEditing(false)}
-                className="w-full md:w-auto px-10 py-4 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white font-bold rounded-xl transition-all transform hover:scale-105 flex items-center justify-center gap-3 shadow-lg shadow-emerald-500/50"
+                onClick={handleSave}
+                disabled={saving}
+                className="w-full md:w-auto px-10 py-4 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white font-bold rounded-xl transition-all transform hover:scale-105 flex items-center justify-center gap-3 shadow-lg shadow-emerald-500/50 disabled:opacity-60"
               >
                 <Save size={22} />
-                Save Changes
+                {saving ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
           )}
