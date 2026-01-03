@@ -3,6 +3,7 @@ import EmployeeProfile from './EmployeeProfile';
 import AdminProfile from './AdminProfile';
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 
   const Profile = ({ user, onLogout }) => {
     const [profile, setProfile] = useState(null);
@@ -191,6 +192,8 @@ import AdminProfile from './AdminProfile';
                 placeholder="Enter first name"
               />
 =======
+=======
+>>>>>>> fef2fa6dc53e6a4f9fa89866abed50397b505877
 const Profile = ({ user, onLogout }) => {
   // Get user role from localStorage if not provided
   const getUserRole = () => {
@@ -216,6 +219,7 @@ const Profile = ({ user, onLogout }) => {
 
   return <EmployeeProfile user={user} onLogout={onLogout} />;
 };
+<<<<<<< HEAD
 >>>>>>> 671ca5dd7e29650f2df2e7d4b72449c8de40e9af
 
               <Input
@@ -258,5 +262,7 @@ const Profile = ({ user, onLogout }) => {
       </div>
     );
 }
+=======
+>>>>>>> fef2fa6dc53e6a4f9fa89866abed50397b505877
 
 export default Profile;
